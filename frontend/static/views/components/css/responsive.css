@@ -1,0 +1,120 @@
+/* ============================================
+   responsive.css — Mobile and tablet breakpoints
+   ============================================ */
+
+/* ─── Tablet (≤ 900px) ─────────────────────── */
+@media (max-width: 900px) {
+  /* Sidebar collapses on tablet */
+  #sidebar { width: 56px; }
+  #sidebar .sidebar-label { display: none; }
+  #sidebar .sidebar-logo span { display: none; }
+  #sidebar .sb-user-name { display: none; }
+  
+  /* Detail panel takes full width on mobile */
+  #detail-panel { width: 100%; position: fixed; right: -100%; box-shadow: var(--shadow-lg); }
+  #detail-panel.open { right: 0; }
+  #main-content.panel-open { margin-right: 0; }
+  
+  /* Panel backdrop visible on tablet */
+  #panel-backdrop { display: block !important; }
+  
+  /* Notes layout single column */
+  .notes-layout { grid-template-columns: 1fr; grid-template-rows: 200px 1fr; }
+  
+  /* Calendar grid adjust */
+  .calendar-day { min-height: 66px; }
+  .day-number { font-size: 11px; }
+  
+  /* Dashboard grid */
+  .dashboard-stats { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── Mobile (≤ 640px) ─────────────────────── */
+@media (max-width: 640px) {
+  :root { --spacing-xl: 16px; }
+  
+  #app-header { padding: 0 var(--spacing-md); height: 50px; }
+  #header-title { display: none; }
+  
+  /* Sidebar overlay on mobile */
+  #sidebar {
+    position: fixed;
+    left: -200px;
+    top: 0;
+    height: 100vh;
+    z-index: 400;
+    width: 200px !important;
+    transition: left var(--transition-base);
+    box-shadow: var(--shadow-lg);
+  }
+  #sidebar.mobile-open { left: 0; }
+  #sidebar .sidebar-label { display: inline !important; }
+  #sidebar .sidebar-logo span { display: inline !important; }
+  
+  #main-view { margin-left: 0 !important; }
+  
+  /* Hamburger toggle visible on mobile */
+  #sidebar-toggle { display: flex !important; }
+  
+  /* Cards full width on mobile */
+  .projects-grid { grid-template-columns: 1fr !important; }
+  
+  /* Dashboard stats stacked */
+  .dashboard-stats { grid-template-columns: repeat(2, 1fr); gap: var(--spacing-sm); }
+  .stat-card { padding: var(--spacing-md); }
+  .stat-value { font-size: 1.5rem; }
+  
+  /* Kanban horizontal scroll */
+  .kanban-board { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .kanban-column { min-width: 240px; }
+  
+  /* Task toolbar wraps */
+  .tasks-toolbar { flex-wrap: wrap; gap: var(--spacing-sm); }
+  .task-search { width: 100%; }
+  
+  /* Modal full screen on mobile */
+  #modal-box { max-width: 100%; border-radius: 0; margin: 0; max-height: 100vh; min-height: 100vh; overflow-y: auto; }
+  #modal-overlay { align-items: flex-end; }
+  
+  /* Detail panel full screen */
+  #detail-panel { width: 100% !important; border-radius: 0; }
+  
+  /* Calendar compact */
+  .calendar-day { min-height: 48px; padding: 3px; }
+  .day-number { font-size: 10px; }
+  .day-task-dot { display: none; }
+  .day-tasks-more { display: none; }
+  .calendar-day.has-tasks::after { content: '•'; color: var(--color-primary); font-size: 16px; display: block; text-align: center; }
+  
+  /* User cards stack */
+  .users-grid { grid-template-columns: repeat(2, 1fr); }
+  
+  /* Project detail header */
+  .project-detail-header { flex-direction: column; align-items: flex-start; gap: var(--spacing-sm); }
+  .project-detail-actions { flex-wrap: wrap; }
+}
+
+/* ─── Very small (≤ 400px) ─────────────────── */
+@media (max-width: 400px) {
+  .users-grid { grid-template-columns: 1fr; }
+  .dashboard-stats { grid-template-columns: 1fr; }
+  .pin-keypad { gap: 6px; }
+  .pin-key { padding: 10px; }
+}
+
+/* ─── Desktop large (≥ 1400px) ─────────────── */
+@media (min-width: 1400px) {
+  :root { --spacing-xl: 28px; }
+  .projects-grid { grid-template-columns: repeat(4, 1fr); }
+  #detail-panel { width: 380px; }
+  #main-content.panel-open { margin-right: 380px; }
+}
+
+/* ─── Print ─────────────────────────────────── */
+@media print {
+  #sidebar, #app-header, #detail-panel, #modal-overlay { display: none !important; }
+  #main-view { margin-left: 0 !important; margin-top: 0 !important; }
+  .view { display: block !important; }
+  .view:not(.print-target) { display: none !important; }
+}

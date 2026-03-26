@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProjectPlanner</title>
+
+  <!-- Icons & Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- CSS Modules (load order: base → layout → components) -->
+  <link rel="stylesheet" href="/static/views/components/css/base.css" />
+  <link rel="stylesheet" href="/static/views/components/css/layout.css" />
+  <link rel="stylesheet" href="/static/views/components/css/sidebar.css" />
+  <link rel="stylesheet" href="/static/views/components/css/users.css" />
+  <link rel="stylesheet" href="/static/views/components/css/dashboard.css" />
+  <link rel="stylesheet" href="/static/views/components/css/projects.css" />
+  <link rel="stylesheet" href="/static/views/components/css/tasks.css" />
+  <link rel="stylesheet" href="/static/views/components/css/kanban.css" />
+  <link rel="stylesheet" href="/static/views/components/css/detail-panel.css" />
+  <link rel="stylesheet" href="/static/views/components/css/subtasks.css" />
+  <link rel="stylesheet" href="/static/views/components/css/notes.css" />
+  <link rel="stylesheet" href="/static/views/components/css/calendar.css" />
+  <link rel="stylesheet" href="/static/views/components/css/modals.css" />
+  <link rel="stylesheet" href="/static/views/components/css/ai.css" />
+  <link rel="stylesheet" href="/static/views/components/css/responsive.css" />
+  <link rel="stylesheet" href="/static/views/components/css/milestones.css" />
+  <link rel="stylesheet" href="/static/views/components/css/disciplines.css" />
+  <link rel="stylesheet" href="/static/views/components/css/timeline.css" />
+  <link rel="stylesheet" href="/static/views/components/css/overrides.css" />
+</head>
+<body class="theme-dark">
+
+  <!-- ========== HEADER ========== -->
+  <header id="app-header">
+    <div class="header-left">
+      <button id="btn-sidebar-toggle" class="icon-btn" title="Toggle sidebar">
+        <i class="fa fa-bars"></i>
+      </button>
+      <div class="app-logo">
+        <i class="fa fa-list-check"></i>
+        <span class="app-name">ProjectPlanner</span>
+      </div>
+    </div>
+    <div class="header-center" id="header-breadcrumb"></div>
+    <div class="header-right">
+      <span id="sync-status" class="sync-status" title="Sync status"></span>
+      <button id="btn-theme-toggle" class="icon-btn" title="Toggle theme">
+        <i class="fa fa-moon"></i>
+      </button>
+      <button id="btn-user-switch" class="user-chip" title="Switch user">
+        <i class="fa fa-user-circle"></i>
+        <span id="header-username">—</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========== APP SHELL ========== -->
+  <div id="app-shell">
+
+    <!-- LEFT SIDEBAR -->
+    <nav id="sidebar">
+      <ul class="sidebar-nav">
+        <li><a class="nav-link" data-view="dashboard" href="#"><i class="fa fa-gauge-high"></i><span>Dashboard</span></a></li>
+        <li><a class="nav-link" data-view="projects" href="#"><i class="fa fa-folder-open"></i><span>Projects</span></a></li>
+        <li><a class="nav-link" data-view="calendar" href="#"><i class="fa fa-calendar-days"></i><span>Calendar</span></a></li>
+        <li><a class="nav-link" data-view="timeline" href="#"><i class="fa fa-chart-gantt"></i><span>Timeline</span></a></li>
+        <li class="nav-divider"></li>
+        <li><a class="nav-link" data-view="settings" href="#"><i class="fa fa-sliders"></i><span>Settings</span></a></li>
+      </ul>
+      <div id="sidebar-projects-mini" class="sidebar-projects-mini"></div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-content">
+
+      <!-- USER SELECTION -->
+      <div id="view-user-selection" class="view">
+        <div class="users-screen">
+          <div class="users-hero">
+            <i class="fa fa-list-check users-hero-icon"></i>
+            <h1>ProjectPlanner</h1>
+            <p>Select your profile to continue</p>
+          </div>
+          <div id="users-list" class="users-list"></div>
+          <button id="btn-create-user" class="btn btn-primary btn-lg">
+            <i class="fa fa-plus"></i> New Profile
+          </button>
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="view-dashboard" class="view hidden">
+        <div class="view-header">
+          <h2>Dashboard</h2>
+          <button id="btn-new-project-dash" class="btn btn-primary"><i class="fa fa-plus"></i> New Project</button>
+        </div>
+        <div id="dashboard-stats" class="dashboard-stats"></div>
+        <!-- Upcoming Milestones strip -->
+        <section class="dashboard-section dash-section-full">
+          <h3><i class="fa fa-flag"></i> Upcoming Milestones <span class="dash-section-sub">next 2 weeks</span></h3>
+          <div id="dashboard-milestones"></div>
+        </section>
+
+        <div class="dashboard-columns">
+          <!-- Left column -->
+          <div class="dashboard-col-stack">
+            <section class="dashboard-section">
+              <h3><i class="fa fa-clock"></i> My Upcoming Tasks <span class="dash-section-sub">next 7 days</span></h3>
+              <div id="dashboard-upcoming" class="upcoming-list"></div>
+            </section>
+            <section class="dashboard-section">
+              <h3><i class="fa fa-fire"></i> Due Soon <span class="dash-section-sub">within 3 days</span></h3>
+              <div id="dashboard-due-soon" class="upcoming-list"></div>
+            </section>
+          </div>
+          <!-- Right column -->
+          <div class="dashboard-col-stack">
+            <section class="dashboard-section">
+              <h3><i class="fa fa-arrow-right-long"></i> Waiting on My Tasks</h3>
+              <div id="dashboard-depending" class="upcoming-list"></div>
+            </section>
+            <section class="dashboard-section">
+              <h3><i class="fa fa-ban"></i> Blocked Tasks</h3>
+              <div id="dashboard-blocked" class="upcoming-list"></div>
+            </section>
+          </div>
+        </div>
+
+        <!-- Recent projects -->
+        <section class="dashboard-section dash-section-full">
+          <h3><i class="fa fa-history"></i> Recent Projects</h3>
+          <div id="dashboard-recent" class="recent-projects"></div>
+        </section>
+      </div>
+
+      <!-- PROJECTS LIST -->
+      <div id="view-projects" class="view hidden">
+        <div class="view-header">
+          <h2>Projects</h2>
+          <div class="view-header-actions">
+            <select id="project-filter-status" class="select-sm">
+              <option value="active">Active</option>
+              <option value="archived">Archived</option>
+              <option value="all">All</option>
+            </select>
+            <button id="btn-new-project" class="btn btn-primary"><i class="fa fa-plus"></i> New Project</button>
+          </div>
+        </div>
+        <div id="project-list" class="project-list"></div>
+      </div>
+
+      <!-- PROJECT DETAIL -->
+      <div id="view-project-detail" class="view hidden">
+        <div class="project-detail-header">
+          <button id="btn-back-projects" class="btn btn-ghost btn-sm"><i class="fa fa-arrow-left"></i> Projects</button>
+          <div class="project-detail-title-row">
+            <span id="project-detail-icon" class="project-icon-lg"></span>
+            <h2 id="project-detail-name" class="project-detail-name"></h2>
+          </div>
+          <div class="project-detail-actions">
+            <button id="btn-export-project" class="btn btn-ghost btn-sm" title="Export JSON"><i class="fa fa-download"></i></button>
+            <button id="btn-archive-project" class="btn btn-ghost btn-sm" title="Archive"><i class="fa fa-box-archive"></i></button>
+            <button id="btn-delete-project" class="btn btn-danger btn-sm" title="Delete"><i class="fa fa-trash"></i></button>
+          </div>
+        </div>
+
+        <!-- Tabs: Team Board | Tasks | Milestones | Notes | Trash -->
+        <div class="project-tabs">
+          <button class="tab-btn" data-tab="team-board"><i class="fa fa-users"></i> Team Board</button>
+          <button class="tab-btn active" data-tab="tasks"><i class="fa fa-check-square"></i> Tasks</button>
+          <button class="tab-btn" data-tab="milestones"><i class="fa fa-flag"></i> Milestones</button>
+          <button class="tab-btn" data-tab="notes"><i class="fa fa-note-sticky"></i> Notes</button>
+          <button class="tab-btn" data-tab="trash"><i class="fa fa-trash-can"></i> Trash</button>
+        </div>
+
+        <!-- TEAM BOARD TAB -->
+        <div id="project-tab-team-board" class="project-tab-pane hidden"></div>
+
+        <!-- TASKS TAB -->
+        <div id="project-tab-tasks" class="project-tab-pane">
+          <div class="tasks-toolbar">
+            <div class="tasks-toolbar-left">
+              <input id="task-search" type="text" class="input-sm" placeholder="Search tasks…" />
+              <select id="task-filter-status" class="select-sm">
+                <option value="all">All Status</option>
+                <option value="todo">Todo</option>
+                <option value="in-progress">In Progress</option>
+                <option value="blocked">Blocked</option>
+                <option value="done">Done</option>
+              </select>
+              <select id="task-filter-priority" class="select-sm">
+                <option value="all">All Priority</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div class="tasks-toolbar-right">
+              <button id="btn-toggle-completed" class="btn btn-ghost btn-sm" title="Toggle completed">
+                <i class="fa fa-eye"></i>
+              </button>
+              <button id="btn-undo" class="btn btn-ghost btn-sm" title="Nothing to undo" disabled>
+                <i class="fa fa-rotate-left"></i>
+              </button>
+              <button id="btn-redo" class="btn btn-ghost btn-sm" title="Nothing to redo" disabled>
+                <i class="fa fa-rotate-right"></i>
+              </button>
+              <button id="btn-view-list" class="btn btn-ghost btn-sm active-view-btn" title="List view">
+                <i class="fa fa-list"></i>
+              </button>
+              <button id="btn-view-kanban" class="btn btn-ghost btn-sm" title="Kanban view">
+                <i class="fa fa-table-columns"></i>
+              </button>
+              <button id="btn-ai-tasks" class="btn btn-ai btn-sm" title="AI Task Suggestions">
+                <i class="fa fa-wand-magic-sparkles"></i> AI
+              </button>
+              <button id="btn-add-task" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Add Task</button>
+            </div>
+          </div>
+
+          <!-- Quick-add task bar -->
+          <div id="quick-add-task" class="quick-add-task hidden">
+            <input id="quick-task-input" type="text" class="input-full" placeholder="Task title… (Enter to save, Esc to cancel)" />
+          </div>
+
+          <!-- Discipline filter pills (rendered dynamically by tasks.js) -->
+          <div id="task-discipline-pills" class="disc-filter-pills"></div>
+
+          <!-- Task list view -->
+          <div id="task-list-view">
+            <div id="task-list" class="task-list"></div>
+          </div>
+
+          <!-- Kanban board view -->
+          <div id="task-kanban-view" class="hidden">
+            <div id="kanban-board" class="kanban-board">
+              <div class="kanban-col" data-status="todo">
+                <div class="kanban-col-header"><span class="kanban-col-dot dot-todo"></span>Todo <span class="kanban-col-count"></span></div>
+                <div class="kanban-cards" data-status="todo"></div>
+                <button class="kanban-add-btn" data-status="todo"><i class="fa fa-plus"></i> Add</button>
+              </div>
+              <div class="kanban-col" data-status="in-progress">
+                <div class="kanban-col-header"><span class="kanban-col-dot dot-in-progress"></span>In Progress <span class="kanban-col-count"></span></div>
+                <div class="kanban-cards" data-status="in-progress"></div>
+                <button class="kanban-add-btn" data-status="in-progress"><i class="fa fa-plus"></i> Add</button>
+              </div>
+              <div class="kanban-col" data-status="blocked">
+                <div class="kanban-col-header"><span class="kanban-col-dot dot-blocked"></span>Blocked <span class="kanban-col-count"></span></div>
+                <div class="kanban-cards" data-status="blocked"></div>
+                <button class="kanban-add-btn" data-status="blocked"><i class="fa fa-plus"></i> Add</button>
+              </div>
+              <div class="kanban-col" data-status="done">
+                <div class="kanban-col-header"><span class="kanban-col-dot dot-done"></span>Done <span class="kanban-col-count"></span></div>
+                <div class="kanban-cards" data-status="done"></div>
+                <button class="kanban-add-btn" data-status="done"><i class="fa fa-plus"></i> Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTES TAB -->
+        <div id="project-tab-notes" class="project-tab-pane hidden">
+          <div class="notes-layout">
+            <div class="notes-sidebar">
+              <button id="btn-add-note" class="btn btn-primary btn-sm btn-full"><i class="fa fa-plus"></i> New Note</button>
+              <div id="notes-list" class="notes-list"></div>
+            </div>
+            <div class="notes-editor-area">
+              <div id="note-editor-empty" class="note-editor-empty">
+                <i class="fa fa-note-sticky"></i>
+                <p>Select a note or create a new one</p>
+              </div>
+              <div id="note-editor" class="note-editor hidden">
+                <div class="note-editor-header">
+                  <input id="note-title-input" type="text" class="note-title-input" placeholder="Note title…" />
+                  <button id="btn-note-preview" class="btn btn-ghost btn-sm" title="Toggle preview"><i class="fa fa-eye"></i></button>
+                  <button id="btn-delete-note" class="btn btn-danger btn-sm" title="Delete note"><i class="fa fa-trash"></i></button>
+                </div>
+                <textarea id="note-content-input" class="note-content-input" placeholder="Write your note in Markdown…"></textarea>
+                <div id="note-preview" class="note-preview hidden"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MILESTONES TAB -->
+        <div id="project-tab-milestones" class="project-tab-pane hidden"></div>
+
+        <!-- TRASH TAB -->
+        <div id="project-tab-trash" class="project-tab-pane hidden">
+          <p class="trash-hint">Deleted tasks can be restored or permanently removed.</p>
+          <div id="trash-list" class="task-list trash-list"></div>
+        </div>
+      </div>
+
+      <!-- TIMELINE -->
+      <div id="view-timeline" class="view hidden">
+        <div class="tl-toolbar"></div>
+        <div class="tl-chart-area"></div>
+      </div>
+
+      <!-- CALENDAR -->
+      <div id="view-calendar" class="view hidden">
+        <div class="view-header">
+          <h2>Calendar</h2>
+          <div class="calendar-nav">
+            <button id="btn-cal-prev" class="btn btn-ghost btn-sm"><i class="fa fa-chevron-left"></i></button>
+            <span id="cal-month-label" class="cal-month-label"></span>
+            <button id="btn-cal-next" class="btn btn-ghost btn-sm"><i class="fa fa-chevron-right"></i></button>
+            <button id="btn-cal-today" class="btn btn-ghost btn-sm">Today</button>
+          </div>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+        <div id="calendar-day-panel" class="calendar-day-panel hidden">
+          <div class="calendar-day-panel-header">
+            <span id="cal-day-label"></span>
+            <button id="btn-close-day-panel" class="icon-btn"><i class="fa fa-xmark"></i></button>
+          </div>
+          <div id="calendar-day-tasks" class="calendar-day-tasks"></div>
+          <button id="btn-cal-add-task" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Add Task</button>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="view-settings" class="view hidden">
+        <div class="view-header"><h2>Settings</h2></div>
+        <div class="settings-layout">
+          <section class="settings-section">
+            <h3>Appearance</h3>
+            <div class="settings-row">
+              <label>Theme</label>
+              <div class="theme-toggle-row">
+                <button id="btn-theme-dark" class="btn btn-ghost btn-sm"><i class="fa fa-moon"></i> Dark</button>
+                <button id="btn-theme-light" class="btn btn-ghost btn-sm"><i class="fa fa-sun"></i> Light</button>
+              </div>
+            </div>
+          </section>
+          <section class="settings-section">
+            <h3>AI Settings</h3>
+            <div class="settings-row">
+              <label for="ai-lang-select">AI Response Language</label>
+              <select id="ai-lang-select" class="select-sm">
+                <option>English</option>
+                <option>Vietnamese</option>
+                <option>Spanish</option>
+                <option>French</option>
+                <option>German</option>
+                <option>Japanese</option>
+                <option>Chinese</option>
+              </select>
+            </div>
+            <div id="ai-status-badge" class="ai-status-badge"></div>
+          </section>
+          <section class="settings-section">
+            <h3>Data Storage</h3>
+            <div class="settings-row">
+              <label for="data-dir-input">Data Folder</label>
+              <input id="data-dir-input" type="text" class="input-full" placeholder="./data" />
+            </div>
+            <button id="btn-save-settings" class="btn btn-primary">Save Settings</button>
+          </section>
+          <section class="settings-section">
+            <h3>Storage Status</h3>
+            <div id="storage-status" class="storage-status"></div>
+          </section>
+        </div>
+      </div>
+
+    </main><!-- /main-content -->
+
+    <!-- TASK DETAIL PANEL (right side) -->
+    <aside id="detail-panel" class="hidden">
+      <div class="detail-panel-header">
+        <div class="detail-panel-tabs">
+          <button class="dp-tab active" data-dptab="details">Details</button>
+          <button class="dp-tab" data-dptab="ai">AI</button>
+        </div>
+        <button id="btn-close-panel" class="icon-btn"><i class="fa fa-xmark"></i></button>
+      </div>
+
+      <!-- Details tab -->
+      <div id="dp-tab-details" class="dp-tab-content">
+        <div class="dp-field-group">
+          <div class="dp-title-row">
+            <input id="dp-task-title" type="text" class="dp-title-input" placeholder="Task title…" />
+          </div>
+          <textarea id="dp-task-description" class="dp-description-input" placeholder="Add a description…" rows="3"></textarea>
+        </div>
+
+        <div class="dp-fields">
+          <div class="dp-field">
+            <span class="dp-field-label"><i class="fa fa-circle-half-stroke"></i> Status</span>
+            <select id="dp-status" class="select-sm">
+              <option value="todo">Todo</option>
+              <option value="in-progress">In Progress</option>
+              <option value="blocked">Blocked</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+          <div class="dp-field">
+            <span class="dp-field-label"><i class="fa fa-flag"></i> Priority</span>
+            <select id="dp-priority" class="select-sm">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+          <div class="dp-field">
+            <span class="dp-field-label"><i class="fa fa-calendar"></i> Due Date</span>
+            <input id="dp-due-date" type="date" class="input-sm" />
+          </div>
+          <div class="dp-field">
+            <span class="dp-field-label"><i class="fa fa-user"></i> Assignee</span>
+            <select id="dp-assignee" class="select-sm"><option value="">Unassigned</option></select>
+          </div>
+          <div class="dp-field">
+            <span class="dp-field-label"><i class="fa fa-flag"></i> Milestone</span>
+            <select id="dp-milestone" class="select-sm"><option value="">None</option></select>
+          </div>
+          <div class="dp-field">
+            <span class="dp-field-label"><i class="fa fa-users"></i> Discipline</span>
+            <select id="dp-discipline" class="select-sm"><option value="">Unassigned</option></select>
+          </div>
+          <div class="dp-field">
+            <span class="dp-field-label"><i class="fa fa-tags"></i> Tags</span>
+            <div id="dp-tags" class="dp-tags"></div>
+          </div>
+        </div>
+
+        <!-- Dependencies -->
+        <div class="dp-section">
+          <div class="dp-section-header">
+            <span><i class="fa fa-link"></i> Dependencies <small style="font-weight:400;color:var(--text-muted)">requires these first</small></span>
+          </div>
+          <div id="dp-deps" class="dp-deps"></div>
+        </div>
+
+        <!-- Subtasks -->
+        <div class="dp-section">
+          <div class="dp-section-header">
+            <span><i class="fa fa-list-check"></i> Subtasks</span>
+            <span id="dp-subtask-progress" class="dp-subtask-progress"></span>
+          </div>
+          <div id="dp-subtasks" class="dp-subtasks"></div>
+          <div class="dp-subtask-add">
+            <input id="dp-subtask-input" type="text" class="input-sm" placeholder="Add subtask…" />
+            <button id="btn-add-subtask" class="btn btn-ghost btn-sm"><i class="fa fa-plus"></i></button>
+          </div>
+        </div>
+
+        <!-- Comments -->
+        <div class="dp-section">
+          <div class="dp-section-header"><span><i class="fa fa-comments"></i> Comments</span></div>
+          <div id="dp-comments" class="dp-comments"></div>
+          <div class="dp-comment-add">
+            <textarea id="dp-comment-input" class="input-sm" rows="2" placeholder="Add a comment…"></textarea>
+            <button id="btn-add-comment" class="btn btn-primary btn-sm">Post</button>
+          </div>
+        </div>
+
+        <!-- Danger zone -->
+        <div class="dp-danger-zone">
+          <button id="btn-dp-delete-task" class="btn btn-danger btn-sm" style="width:100%">
+            <i class="fa fa-trash"></i> Delete Task
+          </button>
+        </div>
+      </div>
+
+      <!-- AI tab -->
+      <div id="dp-tab-ai" class="dp-tab-content hidden">
+        <div class="ai-panel">
+          <div id="ai-panel-answer" class="ai-panel-answer"></div>
+          <div class="ai-panel-actions">
+            <button class="btn btn-ai btn-sm ai-action-btn" data-action="ask-next">
+              <i class="fa fa-wand-magic-sparkles"></i> What should I do next?
+            </button>
+            <button class="btn btn-ai btn-sm ai-action-btn" data-action="smart-deadline">
+              <i class="fa fa-calendar-plus"></i> Suggest deadline
+            </button>
+          </div>
+          <div class="ai-ask-row">
+            <input id="ai-ask-input" type="text" class="input-sm" placeholder="Ask AI about this task…" />
+            <button id="btn-ai-ask" class="btn btn-ai btn-sm"><i class="fa fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div><!-- /app-shell -->
+
+  <!-- MODAL OVERLAY -->
+  <div id="modal-overlay" class="hidden">
+    <div id="modal-box">
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Backdrop for detail panel on mobile -->
+  <div id="panel-backdrop" class="hidden"></div>
+
+  <!-- Milestone detail overlay -->
+  <div id="milestone-detail-overlay" class="hidden"></div>
+
+  <!-- JS Modules (dependency order) -->
+  <script src="/static/views/components/js/data.js"></script>
+  <script src="/static/views/components/js/users.js"></script>
+  <script src="/static/views/components/js/projects.js"></script>
+  <script src="/static/views/components/js/tasks.js"></script>
+  <script src="/static/views/components/js/subtasks.js"></script>
+  <script src="/static/views/components/js/notes.js"></script>
+  <script src="/static/views/components/js/calendar.js"></script>
+  <script src="/static/views/components/js/ai.js"></script>
+  <script src="/static/views/components/js/detail-panel.js"></script>
+  <script src="/static/views/components/js/milestones.js"></script>
+  <script src="/static/views/components/js/disciplines.js"></script>
+  <script src="/static/views/components/js/undo.js"></script>
+  <script src="/static/views/components/js/milestone-detail.js"></script>
+  <script src="/static/views/components/js/toc.js"></script>
+  <script src="/static/views/components/js/dashboard.js"></script>
+  <script src="/static/views/components/js/timeline.js"></script>
+  <script src="/static/views/components/js/settings.js"></script>
+  <script src="/static/views/components/js/events.js"></script>
+</body>
+</html>

@@ -1,8 +1,10 @@
-backend/__pycache__/
-backend/routes/__pycache__/
-data/
 venv/
-backend/services/__pycache__/
-backend/utils/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
 .env
-app_config.json
+data/
+.DS_Store
+*.egg-info/
+dist/
+build/

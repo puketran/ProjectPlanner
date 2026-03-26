@@ -1,0 +1,890 @@
+/* ============================================================
+   milestones.css — Milestone tab styles
+   ============================================================ */
+
+/* ── Toolbar ─────────────────────────────────────────────── */
+.ms-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 12px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 16px;
+}
+.ms-toolbar-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+/* ── Milestone card list ─────────────────────────────────── */
+.ms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 32px;
+}
+.ms-card {
+  display: flex;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  transition: box-shadow var(--transition-fast);
+}
+.ms-card:hover {
+  box-shadow: var(--shadow-md);
+}
+.ms-card-stripe {
+  width: 4px;
+  flex-shrink: 0;
+}
+.ms-card-body {
+  flex: 1;
+  padding: 14px 16px;
+  min-width: 0;
+}
+.ms-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.ms-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ms-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ms-card-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+.ms-task-count {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+.ms-card-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+.ms-card:hover .ms-card-actions {
+  opacity: 1;
+}
+.ms-date-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.ms-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+/* ── Progress bar ────────────────────────────────────────── */
+.ms-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.ms-progress-track {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.ms-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+.ms-progress-pct {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ── Task chips inside card ──────────────────────────────── */
+.ms-task-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+.ms-task-chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ms-task-chip-more {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 2px 4px;
+}
+
+/* ── Unassigned tasks banner ─────────────────────────────── */
+.ms-unassigned {
+  padding: 10px 14px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-color);
+}
+.ms-unassigned-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Empty state ─────────────────────────────────────────── */
+.ms-empty {
+  margin-top: 40px;
+}
+
+/* ── Color picker in modal ───────────────────────────────── */
+.ms-color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ms-color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+.ms-color-swatch:hover { transform: scale(1.15); }
+.ms-color-swatch.selected {
+  border-color: var(--text-primary) !important;
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--text-primary);
+  transform: scale(1.1);
+}
+
+/* ── Milestone drag handle ───────────────────────────────── */
+.ms-card {
+  position: relative;
+}
+.ms-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  flex-shrink: 0;
+  cursor: grab;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-size: 13px;
+}
+.ms-card:hover .ms-drag-handle { opacity: 0.6; }
+.ms-drag-handle:hover           { opacity: 1 !important; color: var(--text-primary); }
+.ms-drag-handle:active          { cursor: grabbing; }
+.ms-dragging                    { opacity: 0.45; outline: 2px dashed var(--border-color); }
+.ms-drag-over                   { outline: 2px solid var(--color-primary, #6366f1); border-radius: var(--radius-lg); }
+
+/* ── Milestone detail overlay ────────────────────────────── */
+#milestone-detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#milestone-detail-overlay.hidden { display: none; }
+
+.msd-panel {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl, 16px);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 720px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.msd-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-left: 12px;
+  gap: 12px;
+}
+.msd-header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.msd-title {
+  font-size: var(--font-size-lg, 18px);
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--text-primary);
+}
+.msd-dates {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.msd-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius);
+  line-height: 1.5;
+}
+.msd-close-btn { margin-left: auto; }
+
+/* stats row */
+.msd-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.msd-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  min-width: 64px;
+}
+.msd-stat-n {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.msd-stat-l {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.msd-progress-track {
+  height: 5px;
+  background: var(--bg-tertiary);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.msd-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s;
+}
+
+/* mini timeline */
+.msd-mini-tl-wrap { padding: 4px 0 2px; }
+.msd-mini-tl-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.msd-mini-tl {
+  position: relative;
+  height: 24px;
+  background: var(--bg-tertiary);
+  border-radius: 99px;
+  overflow: visible;
+}
+.msd-mini-tl-track {
+  position: absolute;
+  inset: 50% 0;
+  height: 3px;
+  transform: translateY(-50%);
+  background: var(--ms-color, #6366f1);
+  border-radius: 99px;
+  opacity: 0.3;
+}
+.msd-mini-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  rotate: 45deg;
+  cursor: default;
+}
+
+/* task list */
+.msd-tasks-header {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
+  padding-top: 10px;
+}
+.msd-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.msd-task-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  cursor: default;
+  transition: background 0.12s;
+}
+.msd-task-row:hover { background: var(--bg-tertiary); }
+.msd-status-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.msd-task-body {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+.msd-task-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 4px;
+}
+.msd-done { text-decoration: line-through; opacity: 0.6; }
+.msd-task-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.msd-overdue { color: #ef4444; }
+.msd-open-btn { flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+.msd-task-row:hover .msd-open-btn { opacity: 0.7; }
+.msd-empty {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ── Manage disciplines list (in modal) ──────────────────── */
+.disc-manage-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  background: var(--bg-tertiary);
+  margin-bottom: 6px;
+}
+.disc-manage-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.disc-manage-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+/* ── Inline card item wrapper ────────────────────────────── */
+.ms-card-item {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  transition: box-shadow var(--transition-fast);
+}
+.ms-card-item.ms-expanded {
+  box-shadow: 0 0 0 2px var(--color-primary, #6366f1);
+}
+.ms-card-item.ms-expanded .ms-card {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom-color: transparent;
+}
+
+/* ── Expand chevron ──────────────────────────────────────── */
+.ms-expand-icon {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.ms-expand-icon.rotated { transform: rotate(180deg); }
+.ms-card-actions { opacity: 0; transition: opacity var(--transition-fast); }
+.ms-card:hover .ms-card-actions { opacity: 1; }
+
+/* ── Card meta row (working days, blocked badge) ─────────── */
+.ms-card-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  min-height: 22px;
+}
+.ms-wdl-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.ms-wdl-overdue {
+  background: #ef444420;
+  color: #ef4444;
+  font-weight: 600;
+}
+.ms-wdl-today {
+  background: #f9731620;
+  color: #f97316;
+  font-weight: 600;
+}
+.ms-blocked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  background: #ef444420;
+  color: #ef4444;
+  font-weight: 600;
+  white-space: nowrap;
+  animation: ms-blocked-pulse 2s ease-in-out infinite;
+}
+@keyframes ms-blocked-pulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: .65; }
+}
+.ms-click-hint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ms-card:hover .ms-click-hint { opacity: 0.6; }
+
+/* Color task chips by status */
+.ms-chip-status-blocked { color: #ef4444 !important; border-color: #ef444435 !important; background: #ef444412 !important; }
+.ms-chip-status-done    { opacity: 0.55; text-decoration: line-through; }
+
+/* ── Inline detail panel ─────────────────────────────────── */
+.ms-inline-detail {
+  display: none;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-primary, #6366f1);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  overflow: hidden;
+}
+.ms-inline-detail.msd-open { display: block; }
+
+/* ── Inline panel container ──────────────────────────────── */
+.msd-inline-panel {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Inline stats header ─────────────────────────────────── */
+.msd-inline-header { display: flex; flex-direction: column; gap: 6px; }
+.msd-inline-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.msd-stat-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+.msd-sp-todo    { background: #6b728018; color: #6b7280; }
+.msd-sp-ip      { background: #3b82f618; color: #3b82f6; }
+.msd-sp-blocked { background: #ef444418; color: #ef4444; font-weight: 700; }
+.msd-sp-done    { background: #22c55e18; color: #22c55e; }
+.msd-stat-sep   { flex: 1; }
+.msd-stat-pct   { font-size: 16px; font-weight: 700; }
+.msd-prog-track { height: 5px; background: var(--bg-tertiary); border-radius: var(--radius-full); overflow: hidden; }
+.msd-prog-fill  { height: 100%; border-radius: var(--radius-full); transition: width 0.4s ease; }
+.msd-inline-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  line-height: 1.5;
+}
+
+/* ── Gantt chart ─────────────────────────────────────────── */
+.msd-gantt { overflow: hidden; border: 1px solid var(--border-color); border-radius: var(--radius); }
+.msd-gantt-inner { display: flex; min-width: 0; }
+
+/* Left labels column */
+.msd-gantt-labels { width: 200px; flex-shrink: 0; border-right: 1px solid var(--border-color); background: var(--bg-secondary); }
+.msd-gl-hdr {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+}
+.msd-gl-row {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.msd-gl-row:last-child { border-bottom: none; }
+.msd-gl-row:hover  { background: var(--bg-tertiary); color: var(--text-primary); }
+.msd-gl-blocked    { color: #ef4444; background: #ef44440a; }
+.msd-disc-tag      { font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.msd-gl-title      { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+/* Right track column */
+.msd-gantt-track { flex: 1; overflow-x: hidden; min-width: 0; }
+.msd-gantt-track-inner { width: 100%; min-width: 100%; }
+.msd-month-hdr {
+  display: flex;
+  height: 26px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.msd-month-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-color);
+  flex-shrink: 0;
+  min-width: 28px;
+}
+.msd-month-cell:last-child { border-right: none; }
+
+/* Bars layer */
+.msd-bars-layer { position: relative; width: 100%; min-width: 100%; }
+.msd-bar-row {
+  position: relative;
+  height: 32px;
+  border-bottom: 1px solid var(--border-color);
+}
+.msd-bar-row:last-child { border-bottom: none; }
+.msd-task-bar {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  cursor: pointer;
+  transition: opacity 0.15s, box-shadow 0.15s;
+  min-width: 20px;
+}
+.msd-task-bar:hover { opacity: 0.82; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+.msd-bar-blocked {
+  border-style: dashed !important;
+  animation: msd-blocked-blink 1.6s ease-in-out infinite;
+}
+@keyframes msd-blocked-blink { 0%,100%{opacity:1} 50%{opacity:.5} }
+.msd-bar-done   { opacity: 0.55; }
+.msd-bar-lbl    { font-size: 10px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* SVG dep arrows overlay */
+.msd-dep-svg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* ── Task list section ───────────────────────────────────── */
+.msd-tl-hdr {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  padding: 8px 0 4px;
+  border-top: 1px solid var(--border-color);
+}
+.msd-task-list  { display: flex; flex-direction: column; }
+.msd-task-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.msd-task-row:last-child { border-bottom: none; }
+.msd-tr-blocked {
+  background: #ef44440a;
+  border-left: 3px solid #ef4444;
+  padding-left: 6px;
+  border-radius: var(--radius-sm);
+}
+.msd-status-btn { background: none; border: none; cursor: pointer; padding: 0; font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+.msd-task-body  { flex: 1; min-width: 0; cursor: pointer; }
+.msd-trow-title { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.msd-disc-prefix { font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.msd-task-meta  { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 3px; font-size: 12px; color: var(--text-muted); }
+.msd-done       { text-decoration: line-through; opacity: .6; }
+.msd-overdue    { color: #ef4444; }
+.msd-dep-info   { color: var(--text-muted); }
+.msd-dep-info em { font-style: normal; color: var(--text-secondary); }
+.msd-open-btn   { flex-shrink: 0; }
+.msd-empty      { color: var(--text-muted); font-size: var(--font-size-sm); text-align: center; padding: 16px; }
+.msd-no-dates   { color: var(--text-muted); font-size: var(--font-size-sm); padding: 12px; text-align: center; background: var(--bg-secondary); border-radius: var(--radius); }
+
+
+/* -----------------------------------------------------------
+   NEW: Gantt toolbar (mode toggle)
+   ----------------------------------------------------------- */
+.msd-gantt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  gap: 8px;
+}
+.msd-gt-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.msd-mode-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-primary);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+.msd-mode-btn {
+  font-size: 11px;
+  padding: 3px 10px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: calc(var(--radius-sm) - 1px);
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.msd-mode-btn:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+.msd-mode-active {
+  background: var(--color-primary, #6366f1) !important;
+  color: #fff !important;
+}
+
+/* -----------------------------------------------------------
+   NEW: Ghost bars (dashed prerequisite copy)
+   ----------------------------------------------------------- */
+.msd-ghost-bar {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 18px;
+  border-radius: 4px;
+  border: 2px dashed currentColor;
+  background: transparent;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 5px;
+  pointer-events: none;
+  opacity: 0.45;
+  z-index: 1;
+}
+
+/* -----------------------------------------------------------
+   NEW: Today vertical line
+   ----------------------------------------------------------- */
+.msd-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #f97316;
+  z-index: 3;
+  pointer-events: none;
+}
+.msd-today-lbl {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #f97316;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* -----------------------------------------------------------
+   NEW: Bottleneck stripe (overlap region, behind bars)
+   ----------------------------------------------------------- */
+.msd-bn-stripe {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    #f9731614,
+    #f9731614 4px,
+    transparent 4px,
+    transparent 10px
+  );
+  border-left: 1px dashed #f9731660;
+  border-right: 1px dashed #f9731660;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* -----------------------------------------------------------
+   NEW: Bottleneck bar highlight
+   ----------------------------------------------------------- */
+.msd-bar-bottleneck {
+  box-shadow: 0 0 0 2px #f97316 !important;
+  z-index: 2;
+}
+
+/* -----------------------------------------------------------
+   NEW: Bottleneck label decorations (left column)
+   ----------------------------------------------------------- */
+.msd-gl-overlap {
+  background: #f9731608;
+}
+.msd-gl-bn-icon {
+  color: #f97316;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+/* -----------------------------------------------------------
+   NEW: Bottleneck stat pill
+   ----------------------------------------------------------- */
+.msd-sp-bottle {
+  background: #f9731618;
+  color: #ea6a00;
+  font-weight: 700;
+  border-color: #f9731640;
+}
+/* -----------------------------------------------------------
+   NEW: Zoom controls (toolbar)
+   ----------------------------------------------------------- */
+.msd-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.msd-zoom-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+  transition: background 0.1s, color 0.1s;
+}
+.msd-zoom-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.msd-zoom-lvl {
+  font-size: 11px;
+  min-width: 26px;
+  text-align: center;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

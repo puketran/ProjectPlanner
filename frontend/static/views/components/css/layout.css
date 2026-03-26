@@ -1,0 +1,83 @@
+/* ============================================
+   layout.css — App shell: header + sidebar + main
+   ============================================ */
+
+body { display: flex; flex-direction: column; overflow: hidden; }
+
+/* ---- Header ---- */
+#app-header {
+  height: var(--header-height);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-md);
+  gap: var(--spacing-md);
+  flex-shrink: 0;
+  z-index: var(--z-header);
+  position: sticky;
+  top: 0;
+}
+.header-left, .header-right { display: flex; align-items: center; gap: var(--spacing-sm); flex-shrink: 0; }
+.header-center { flex: 1; min-width: 0; }
+.app-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: var(--font-size-lg); }
+.app-logo i { color: var(--color-primary); font-size: 1.25rem; }
+.app-name { color: var(--text-primary); }
+
+/* User chip in header */
+.user-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg-tertiary); border: 1px solid var(--border-color);
+  border-radius: 999px; padding: 4px 12px 4px 8px;
+  font-size: var(--font-size-sm); color: var(--text-secondary);
+  transition: background var(--transition-fast);
+}
+.user-chip:hover { background: var(--bg-hover); color: var(--text-primary); }
+.user-chip i { font-size: 1rem; color: var(--color-primary); }
+
+/* Sync status indicator */
+.sync-status {
+  font-size: var(--font-size-xs);
+  padding: 3px 8px;
+  border-radius: 999px;
+  transition: all var(--transition-base);
+}
+.sync-status.syncing  { background: rgba(245,158,11,.15); color: #f59e0b; }
+.sync-status.synced   { background: rgba(34,197,94,.15);  color: #22c55e; }
+.sync-status.error    { background: rgba(239,68,68,.15);  color: #ef4444; }
+
+/* ---- App shell ---- */
+#app-shell {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: calc(100vh - var(--header-height));
+}
+
+/* ---- Main content ---- */
+#main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  transition: margin-right var(--transition-base);
+}
+#main-content.panel-open {
+  margin-right: var(--detail-panel-width);
+}
+
+/* ---- Detail panel ---- */
+#detail-panel {
+  width: var(--detail-panel-width);
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-shrink: 0;
+  transition: transform var(--transition-base);
+  position: relative;
+  z-index: var(--z-panel);
+}
+#detail-panel.hidden { display: none; }

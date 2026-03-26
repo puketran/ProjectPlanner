@@ -1,0 +1,198 @@
+/* ============================================
+   dashboard.css â€” Dashboard stats & lists
+   ============================================ */
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-card-label { font-size: var(--font-size-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.stat-card-value { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+.stat-card-icon { font-size: 1.2rem; margin-bottom: 4px; }
+.stat-projects { border-left: 3px solid var(--color-primary); }
+.stat-tasks    { border-left: 3px solid var(--color-warning); }
+.stat-today    { border-left: 3px solid var(--color-success); }
+.stat-overdue  { border-left: 3px solid var(--color-danger); }
+.stat-overdue .stat-card-value { color: var(--color-danger); }
+
+.dashboard-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xl);
+}
+.dashboard-section h3 {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+
+/* Upcoming tasks list */
+.upcoming-list { display: flex; flex-direction: column; gap: 6px; }
+.upcoming-task {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 8px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  font-size: var(--font-size-sm);
+}
+.upcoming-task:hover { background: var(--card-hover); }
+.upcoming-task-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.upcoming-task-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upcoming-task-due { font-size: var(--font-size-xs); color: var(--text-muted); flex-shrink: 0; }
+.upcoming-task-due.overdue { color: var(--color-danger); }
+
+/* Recent projects */
+.recent-projects { display: flex; flex-direction: column; gap: 6px; }
+.recent-project-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 8px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  font-size: var(--font-size-sm);
+}
+.recent-project-item:hover { background: var(--card-hover); }
+.recent-project-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.recent-project-name { flex: 1; font-weight: 500; }
+.recent-project-progress { font-size: var(--font-size-xs); color: var(--text-muted); }
+
+/* --- New dashboard layout -------------------------------- */
+.dash-section-full { margin-bottom: var(--spacing-xl); }
+.dash-section-sub  { font-size: 11px; font-weight: 400; color: var(--text-muted); margin-left: 4px; }
+
+/* Two-column layout — each col stacks its own sections */
+.dashboard-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  align-items: start;
+}
+.dashboard-col-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.dash-empty {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  padding: 8px 0;
+}
+
+/* --- Upcoming milestone cards ---------------------------- */
+.dash-ms-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.dash-ms-card {
+  display: flex;
+  align-items: stretch;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.12s, box-shadow 0.12s;
+  min-width: 220px;
+  max-width: 300px;
+  flex: 1 1 220px;
+}
+.dash-ms-card:hover { background: var(--card-hover); box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+.dash-ms-card.dash-ms-urgent  { border-color: #ef444440; }
+.dash-ms-card.dash-ms-soon    { border-color: #f9731440; }
+.dash-ms-stripe { width: 4px; flex-shrink: 0; }
+.dash-ms-body { padding: 10px 12px; flex: 1; min-width: 0; }
+.dash-ms-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.dash-ms-name { font-weight: 600; font-size: var(--font-size-sm); display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-ms-days { font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+.dash-ms-days-urgent { color: #ef4444; }
+.dash-ms-days-soon   { color: #f97316; }
+.dash-ms-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); margin-bottom: 6px; flex-wrap: wrap; }
+.dash-ms-proj { font-weight: 500; }
+.dash-ms-blocked { color: #ef4444; display: flex; align-items: center; gap: 3px; }
+.dash-ms-count { margin-left: auto; }
+.dash-ms-prog-row { display: flex; align-items: center; gap: 8px; }
+.dash-ms-prog-track { flex: 1; height: 5px; border-radius: 99px; background: var(--bg-tertiary); overflow: hidden; }
+.dash-ms-prog-fill { height: 100%; border-radius: 99px; transition: width .3s; }
+.dash-ms-pct { font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+
+/* --- Upcoming task items (shared) ----------------------- */
+.upcoming-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.1s;
+  font-size: var(--font-size-sm);
+}
+.upcoming-item:hover { background: var(--card-hover); }
+.upcoming-item.overdue { border-left: 3px solid #ef4444; }
+.upcoming-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.upcoming-info { flex: 1; min-width: 0; }
+.upcoming-task-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upcoming-meta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+/* Dep / blocked special styles */
+.dash-dep-needs { color: var(--text-secondary); }
+.dash-blocked-item .upcoming-dot { background: #ef4444; }
+
+/* --- Recent projects (keep existing, minor tweaks) ------- */
+.recent-project-block { display: flex; flex-direction: column; gap: 1px; }
+.recent-project-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 8px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.1s;
+  font-size: var(--font-size-sm);
+}
+.recent-project-item:hover { background: var(--card-hover); }
+.recent-project-icon { font-size: 18px; flex-shrink: 0; }
+.recent-project-info { flex: 1; min-width: 0; }
+.recent-project-name { font-weight: 500; }
+.recent-project-bar { height: 4px; background: var(--bg-tertiary); border-radius: 99px; overflow: hidden; margin-top: 4px; }
+.recent-project-fill { height: 100%; border-radius: 99px; }
+.recent-project-pct { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+
+/* --- Detail panel danger zone ---------------------------- */
+.dp-danger-zone {
+  padding: 12px 16px 20px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border-color);
+}

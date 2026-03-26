@@ -1,0 +1,100 @@
+/* ============================================
+   calendar.css — Monthly grid, day cells, task dots
+   ============================================ */
+
+.calendar-layout { display: flex; flex-direction: column; gap: var(--spacing-lg); height: calc(100vh - 200px); }
+.calendar-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+.calendar-title { font-size: var(--font-size-xl); font-weight: 700; min-width: 200px; text-align: center; }
+.calendar-grid-wrapper { flex: 1; overflow: auto; }
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  background: var(--border-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.calendar-day-header {
+  background: var(--bg-secondary);
+  padding: 8px;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.calendar-day {
+  background: var(--bg-primary);
+  min-height: 90px;
+  padding: 6px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  position: relative;
+}
+.calendar-day:hover { background: var(--bg-hover); }
+.calendar-day.other-month { opacity: .35; }
+.calendar-day.today { background: rgba(99,102,241,.07); }
+.calendar-day.today .day-number { color: var(--color-primary); font-weight: 700; }
+.calendar-day.has-overdue { border-top: 2px solid var(--color-danger); }
+
+.day-number { font-size: var(--font-size-sm); font-weight: 500; margin-bottom: 4px; color: var(--text-secondary); }
+.day-tasks { display: flex; flex-direction: column; gap: 2px; }
+.day-task-dot {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgba(99,102,241,.15);
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+.day-task-dot:hover { opacity: .8; }
+.day-task-dot.overdue { background: rgba(239,68,68,.15); color: var(--color-danger); }
+.day-task-dot.done { text-decoration: line-through; opacity: .5; }
+.day-task-dot.high { border-left: 2px solid var(--color-danger); }
+.day-task-dot.low { opacity: .7; }
+.day-tasks-more { font-size: 10px; color: var(--text-muted); cursor: pointer; }
+.day-tasks-more:hover { color: var(--color-primary); }
+
+/* Day detail popover */
+.day-detail-panel {
+  position: fixed;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  min-width: 280px;
+  max-width: 340px;
+  box-shadow: var(--shadow-lg);
+  z-index: 200;
+}
+.day-detail-close { float: right; cursor: pointer; color: var(--text-muted); }
+.day-detail-close:hover { color: var(--text-primary); }
+.day-detail-tasks { display: flex; flex-direction: column; gap: 8px; margin-top: var(--spacing-md); }
+.day-task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  border-left: 3px solid var(--color-primary);
+}
+.day-task-item.overdue { border-left-color: var(--color-danger); }
+.day-task-item.done { opacity: .6; text-decoration: line-through; }
+
+/* Mini calendar in sidebar (if used) */
+.mini-calendar { font-size: var(--font-size-xs); }
+.mini-calendar .calendar-grid { grid-template-columns: repeat(7, 1fr); gap: 1px; }
+.mini-calendar .calendar-day { min-height: 28px; padding: 3px; }
+.mini-calendar .day-number { font-size: 11px; }

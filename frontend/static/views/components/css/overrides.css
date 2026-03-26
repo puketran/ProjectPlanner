@@ -1,0 +1,808 @@
+/* ============================================================
+   overrides.css — Extra styles for JS-generated elements
+   not covered by existing CSS component files
+   ============================================================ */
+
+/* ─── User card (horizontal layout from users.js) ──────────── */
+.users-list { flex-direction: column; align-items: center; max-width: 400px; }
+.user-card  { flex-direction: row; align-items: center; min-width: 320px; padding: var(--spacing-md) var(--spacing-lg); }
+.user-info  { flex: 1; min-width: 0; }
+.user-meta  { font-size: var(--font-size-xs); color: var(--text-muted); }
+.delete-user-btn { margin-left: auto; opacity: 0; transition: opacity var(--transition-fast); }
+.user-card:hover .delete-user-btn { opacity: 1; }
+
+/* ─── Projects grid ─────────────────────────────────────────── */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+
+/* ─── Project card internal structure ───────────────────────── */
+.project-card-stripe {
+  height: 4px;
+  background: var(--project-color, #6366f1);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  margin: calc(-1 * var(--spacing-lg)) calc(-1 * var(--spacing-lg)) var(--spacing-sm);
+}
+.project-card-body  { display: flex; flex-direction: column; flex: 1; }
+.project-icon       { font-size: 1.5rem; line-height: 1; }
+.project-progress-track { height: 4px; background: var(--bg-tertiary); border-radius: 2px; margin: 8px 0 6px; overflow: hidden; }
+.project-progress-fill  { height: 100%; background: var(--project-color, #6366f1); border-radius: 2px; transition: width .4s ease; }
+.project-card-meta  { display: flex; align-items: center; justify-content: space-between; font-size: var(--font-size-xs); color: var(--text-muted); margin-top: auto; }
+
+/* ─── Stat cards (dashboard.js) ─────────────────────────────── */
+.stat-icon  { font-size: 1.4rem; width: 44px; height: 44px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stat-info  { display: flex; flex-direction: column; gap: 2px; }
+.stat-card  { flex-direction: row !important; align-items: center; gap: var(--spacing-md); }
+.stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+.stat-label { font-size: var(--font-size-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.stat-danger .stat-value { color: var(--color-danger); }
+
+/* ─── Upcoming tasks (dashboard.js) ─────────────────────────── */
+.upcoming-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  font-size: var(--font-size-sm);
+}
+.upcoming-item:hover  { background: var(--card-hover); }
+.upcoming-item.overdue { border-left: 3px solid var(--color-danger); }
+.upcoming-dot   { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.upcoming-info  { flex: 1; min-width: 0; }
+.upcoming-task-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upcoming-meta  { font-size: var(--font-size-xs); color: var(--text-muted); }
+
+/* ─── Recent projects (dashboard.js) ────────────────────────── */
+.recent-project-icon  { font-size: 1.3rem; flex-shrink: 0; }
+.recent-project-info  { flex: 1; min-width: 0; }
+.recent-project-bar   { height: 3px; background: var(--bg-tertiary); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+.recent-project-fill  { height: 100%; border-radius: 2px; }
+.recent-project-pct   { font-size: var(--font-size-xs); color: var(--text-muted); flex-shrink: 0; }
+
+/* ─── Sidebar mini projects (toc.js) ─────────────────────────── */
+.sidebar-projects-mini { padding: var(--spacing-sm) 0; border-top: 1px solid var(--border-color); margin-top: auto; }
+.sidebar-mini-header { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); padding: 6px 12px 4px; }
+.sidebar-mini-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  border-radius: 0;
+  font-size: var(--font-size-sm);
+  transition: background var(--transition-fast), color var(--transition-fast);
+  overflow: hidden;
+}
+.sidebar-mini-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.sidebar-mini-item.active { background: rgba(99,102,241,.1); color: var(--color-primary); }
+.sidebar-mini-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.sidebar-mini-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ─── Settings layout (settings.js) ─────────────────────────── */
+.settings-layout   { display: flex; flex-direction: column; gap: var(--spacing-xl); max-width: 640px; }
+.settings-section  { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--spacing-lg) var(--spacing-xl); }
+.settings-section h3 { font-size: var(--font-size-base); font-weight: 600; margin-bottom: var(--spacing-md); color: var(--text-secondary); padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
+.settings-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); padding: 8px 0; }
+.settings-row label { font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 500; }
+.theme-toggle-row { display: flex; gap: 6px; }
+.storage-status { display: flex; flex-direction: column; gap: 4px; }
+.ai-status-badge { margin-top: 8px; }
+
+/* ─── Project detail header fixes ───────────────────────────── */
+.project-detail-header { display: flex; align-items: center; gap: var(--spacing-md); flex-wrap: wrap; padding-bottom: var(--spacing-md); margin-bottom: var(--spacing-md); border-bottom: 1px solid var(--border-color); }
+.project-detail-title-row { display: flex; align-items: center; gap: 10px; flex: 1; }
+.project-detail-name { font-size: var(--font-size-xl); font-weight: 700; }
+.project-icon-lg { font-size: 1.6rem; }
+.project-detail-actions { display: flex; gap: 6px; margin-left: auto; }
+.project-tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--border-color); margin-bottom: var(--spacing-md); }
+.tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+
+/* ─── Badge variants ─────────────────────────────────────────── */
+.badge-status-todo        { background: rgba(148,163,184,.15); color: #94a3b8; }
+.badge-status-in-progress { background: rgba(59,130,246,.15);  color: #3b82f6; }
+.badge-status-blocked     { background: rgba(239,68,68,.15);   color: #ef4444; }
+.badge-status-done        { background: rgba(34,197,94,.15);   color: #22c55e; }
+.badge-active  { background: rgba(34,197,94,.15);  color: #22c55e; }
+.badge-archived { background: rgba(148,163,184,.15); color: #94a3b8; }
+.badge-draft   { background: rgba(245,158,11,.15); color: #f59e0b; }
+
+/* ─── Calendar day panel ─────────────────────────────────────── */
+.calendar-day-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-md);
+  max-width: 500px;
+}
+.calendar-day-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--spacing-md); font-weight: 600; }
+.calendar-day-tasks { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--spacing-md); }
+.cal-month-label { font-weight: 600; min-width: 160px; text-align: center; }
+.calendar-nav { display: flex; align-items: center; gap: 6px; }
+
+/* ─── Trash hint ─────────────────────────────────────────────── */
+.trash-hint { font-size: var(--font-size-sm); color: var(--text-muted); margin-bottom: var(--spacing-md); }
+.trash-row  { opacity: .75; }
+.trash-row:hover { opacity: 1; }
+
+/* ─── AI status / panel ──────────────────────────────────────── */
+.ai-panel-answer { min-height: 40px; }
+.ai-panel-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.ai-ask-row { display: flex; gap: 6px; margin-top: 8px; }
+
+/* ─── Tag chip editable ──────────────────────────────────────── */
+.tag-chip-editable { display: inline-flex; align-items: center; gap: 4px; }
+.tag-remove { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0 2px; font-size: 1rem; line-height: 1; }
+.tag-remove:hover { color: var(--color-danger); }
+.input-tag-inline { background: transparent; border: none; color: var(--text-primary); font-size: var(--font-size-xs); outline: none; width: 80px; }
+
+/* ─── View header ────────────────────────────────────────────── */
+.view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--spacing-xl); flex-wrap: wrap; gap: var(--spacing-sm); }
+.view-header h2 { font-size: var(--font-size-xl); font-weight: 700; }
+.view-header-actions { display: flex; align-items: center; gap: var(--spacing-sm); }
+
+/* ─── Dashboard columns ──────────────────────────────────────── */
+.dashboard-columns { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-xl); margin-top: var(--spacing-xl); }
+.dashboard-section h3 { font-size: var(--font-size-base); font-weight: 600; margin-bottom: var(--spacing-md); color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+@media (max-width: 768px) { .dashboard-columns { grid-template-columns: 1fr; } }
+
+/* ─── Sync status in header ──────────────────────────────────── */
+.sync-status { font-size: var(--font-size-xs); display: flex; align-items: center; gap: 4px; }
+.sync-modified { color: var(--color-warning); }
+.sync-saving   { color: var(--text-muted); }
+.sync-saved    { color: var(--color-success); }
+.sync-error    { color: var(--color-danger); }
+
+/* ─── General helpers ────────────────────────────────────────── */
+.text-danger  { color: var(--color-danger) !important; }
+.text-muted   { color: var(--text-muted) !important; }
+.btn-full     { width: 100%; }
+.is-error     { border-color: var(--color-danger) !important; }
+.btn-ai       { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; }
+.btn-ai:hover { opacity: .9; }
+.btn-lg       { padding: 12px 24px; font-size: var(--font-size-base); }
+.empty-state  { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-md); padding: var(--spacing-xl); color: var(--text-muted); text-align: center; min-height: 120px; }
+.empty-state i { font-size: 2rem; opacity: .3; }
+.select-sm  { padding: 5px 8px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); font-size: var(--font-size-sm); }
+.input-sm   { padding: 6px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); font-size: var(--font-size-sm); font-family: inherit; outline: none; }
+.input-sm:focus { border-color: var(--color-primary); }
+.input-full { width: 100%; padding: 8px 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); font-size: var(--font-size-sm); font-family: inherit; outline: none; box-sizing: border-box; }
+.input-full:focus { border-color: var(--color-primary); }
+.active-view-btn { background: rgba(99,102,241,.15) !important; color: var(--color-primary) !important; }
+.project-dropdown { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); min-width: 180px; padding: 4px; display: flex; flex-direction: column; }
+
+/* ─── Inline subtask subview (tasks.js list view) ────────────── */
+
+/* Wrapper that holds the task-row + the collapsible subtask panel */
+.task-item-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Arrow toggle button inside the task row */
+.task-subtask-toggle {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+.task-subtask-toggle:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+/* Chevron arrow — rotates 90° when open */
+.task-subtask-arrow {
+  font-size: 10px;
+  transition: transform 0.18s ease;
+  display: block;
+}
+.task-subtask-arrow.open { transform: rotate(90deg); }
+
+/* Progress counter — hide when no subtasks */
+.task-subtask-progress { font-size: var(--font-size-xs); color: var(--text-muted); display: inline-flex; align-items: center; gap: 3px; }
+.subtask-progress-empty { display: none; }
+
+/* When subtask panel is open, square the task-row's bottom corners */
+.task-item-wrap.subtasks-open > .task-row {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: var(--border-color);
+}
+
+/* The inline subtask panel */
+.task-inline-subtasks {
+  display: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+  padding: 8px 12px 10px 44px;
+  animation: subtaskSlideDown 0.15s ease;
+}
+.task-inline-subtasks.open { display: block; }
+
+@keyframes subtaskSlideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Individual inline subtask item */
+.inline-subtask-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+.inline-subtask-item:last-of-type { border-bottom: none; }
+
+.inline-subtask-checkbox {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.inline-subtask-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inline-subtask-done .inline-subtask-title {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.inline-subtask-delete-btn {
+  all: unset;
+  opacity: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+}
+.inline-subtask-item:hover .inline-subtask-delete-btn { opacity: 1; }
+.inline-subtask-delete-btn:hover { color: var(--color-danger); }
+
+/* Empty state text inside the panel */
+.inline-subtask-empty {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  padding: 4px 0;
+  margin: 0;
+}
+
+/* Add-subtask row at the bottom of the panel */
+.task-inline-subtask-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.inline-subtask-input {
+  flex: 1;
+  padding: 5px 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.inline-subtask-input:focus { border-color: var(--color-primary); }
+.inline-subtask-input::placeholder { color: var(--text-muted); }
+
+.inline-subtask-add-btn {
+  padding: 5px 8px;
+  flex-shrink: 0;
+}
+
+/* ─── Task pin button ────────────────────────────────────────── */
+.task-pin-btn {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+  font-size: 11px;
+}
+.task-row:hover .task-pin-btn { opacity: 1; }
+.task-pin-btn.pinned {
+  opacity: 1;
+  color: #f59e0b;
+}
+.task-pin-btn:hover { background: var(--bg-hover); color: #f59e0b; }
+
+/* ─── Project card group (card + pinned strip) ───────────────── */
+.project-card-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* When a pinned strip is attached, square the card's bottom corners */
+.project-card-group .project-card:has(+ .project-pinned-tasks) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Pinned tasks strip below project card */
+.project-pinned-tasks {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-top: 2px solid var(--project-color, #6366f1);
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  padding: 6px 12px 8px;
+}
+
+.project-pinned-header {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--project-color, #6366f1);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.project-pinned-task-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  font-size: var(--font-size-xs);
+}
+.project-pinned-task-row:hover { background: var(--bg-hover); }
+.project-pinned-task-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+/* ─── Dashboard pinned tasks (under recent projects) ─────────── */
+.recent-project-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-pinned-task {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 22px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+  transition: background var(--transition-fast);
+  font-size: var(--font-size-xs);
+}
+.dash-pinned-task:last-child { border-bottom: none; margin-bottom: 4px; }
+.dash-pinned-task:hover { background: var(--bg-hover); }
+
+.dash-pinned-icon {
+  font-size: 9px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.dash-pinned-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+/* ─── Subtask edit modal (subtasks.js) ───────────────────────── */
+
+/* Side-by-side form group row */
+.form-group-row {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+}
+.form-group-row .form-group { flex: 1; }
+
+/* Completed checkbox row in modal */
+.subtask-done-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+.subtask-modal-done-cb {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+/* Subtask body — clickable content area */
+.subtask-body {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
+  transition: background var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.subtask-body:hover { background: var(--bg-hover); }
+
+/* Notes preview under title */
+.subtask-notes-preview {
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+/* Meta chips row (due date, priority, assignee) */
+.subtask-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.subtask-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.subtask-chip-due { color: var(--text-muted); }
+
+/* ─── Inline subtask body & meta (tasks.js inline list) ──────── */
+
+.inline-subtask-body {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-radius: var(--radius-sm);
+  padding: 1px 4px;
+  transition: background var(--transition-fast);
+}
+.inline-subtask-body:hover { background: var(--bg-hover); }
+
+.inline-st-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 1px;
+}
+
+.inline-st-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ─── Project pin button on project card ─────────────────────── */
+
+.project-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.project-pin-btn {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+.project-card:hover .project-pin-btn { opacity: 1; }
+.project-pin-btn.pinned {
+  opacity: 1;
+  color: #f59e0b;
+  transform: rotate(-45deg);
+}
+.project-pin-btn:hover { color: #f59e0b; }
+
+/* Pinned badge indicator on card */
+.project-card-group .project-card.is-pinned .project-card-stripe {
+  background: linear-gradient(90deg, var(--project-color, #6366f1) 60%, #f59e0b);
+}
+
+
+
+/* -- Inline subtask drag-to-reorder ---------------------- */
+.inline-subtask-drag-handle {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  color: var(--text-muted);
+  opacity: 0;
+  cursor: grab;
+  font-size: 11px;
+  transition: opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+.inline-subtask-item:hover .inline-subtask-drag-handle { opacity: 1; }
+.inline-subtask-drag-handle:active { cursor: grabbing; }
+
+.st-dragging {
+  opacity: 0.4;
+  background: var(--bg-tertiary);
+}
+.st-drag-over {
+  border-top: 2px solid var(--color-primary) !important;
+  border-radius: 0;
+}
+
+/* -- Task milestone group headers ------------------------- */
+.task-milestone-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 6px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ms-color, var(--text-muted));
+  border-top: 1px solid var(--border-color);
+  margin-top: 4px;
+}
+.task-milestone-header:first-child { border-top: none; margin-top: 0; }
+.task-ms-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.task-ms-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.task-ms-count {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+}
+.task-ms-unassigned .task-ms-label { color: var(--text-muted); }
+
+/* -- Milestone badge chip on task row --------------------- */
+.task-milestone-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Undo / Redo buttons ──────────────────────────────────── */
+#btn-undo, #btn-redo {
+  padding: 4px 9px;
+  font-size: 15px;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+#btn-undo:hover:not(:disabled), #btn-redo:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+#btn-undo:disabled, #btn-redo:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ── Task dependency chips (detail panel) ────────────────── */
+.dp-deps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dep-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 4px;
+}
+.dep-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px 3px 10px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--color-primary, #6366f1) 12%, transparent);
+  color: var(--color-primary, #6366f1);
+  border: 1px solid color-mix(in srgb, var(--color-primary, #6366f1) 25%, transparent);
+  white-space: nowrap;
+  max-width: 220px;
+}
+.dep-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.dep-chip-text {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  border-color: var(--border-color);
+}
+.dep-chip-rm {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.55;
+  padding: 0 0 0 2px;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.dep-chip-rm:hover { opacity: 1; }
+.dep-add-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.dep-add-row input {
+  flex: 1;
+  font-size: var(--font-size-xs);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+.dep-add-row input:focus { outline: none; border-color: var(--color-primary); }
+.dep-add-btn {
+  padding: 4px 10px;
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dep-add-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+/* ── Timeline discipline filter pills ────────────────────── */
+.tl-disc-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 2px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+.tl-disc-pill {
+  padding: 3px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.tl-disc-pill:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.tl-disc-pill.active {
+  background: var(--color-primary, #6366f1);
+  color: #fff;
+  border-color: var(--color-primary, #6366f1);
+}
+
+/* ── Discipline prefix [Dev] [Art] [GD] on task rows ─────── */
+.task-disc-pfx {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-right: 2px;
+  opacity: 0.9;
+}
+
+/* -- Dependent task out-chips on task rows ------------------- */
+.task-dep-out-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 1px 8px;
+  border-radius: var(--radius-full, 999px);
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  font-weight: 500;
+}
+.task-dep-out-chip:hover {
+  background: var(--color-primary, #6366f1);
+  color: #fff;
+  border-color: transparent;
+}
+.task-dep-out-chip .fa {
+  font-size: 9px;
+}

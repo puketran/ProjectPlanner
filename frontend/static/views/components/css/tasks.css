@@ -1,0 +1,65 @@
+/* ============================================
+   tasks.css — Task list rows
+   ============================================ */
+
+/* Toolbar */
+.tasks-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+.tasks-toolbar-left, .tasks-toolbar-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.active-view-btn { background: var(--bg-hover) !important; color: var(--text-primary) !important; }
+
+/* Quick add */
+.quick-add-task {
+  margin-bottom: var(--spacing-md);
+  animation: slideDown 0.15s ease;
+}
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Task list */
+.task-list { display: flex; flex-direction: column; gap: 4px; }
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.task-row:hover { background: var(--card-hover); border-color: var(--color-primary); }
+.task-row.done-task { opacity: .55; }
+.task-row.overdue-task .task-due { color: var(--color-danger); }
+
+.task-checkbox {
+  width: 16px; height: 16px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border-color);
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.task-checkbox.checked { background: var(--color-success); border-color: var(--color-success); color: white; font-size: 10px; }
+.task-checkbox:hover { border-color: var(--color-primary); }
+
+.task-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-sm); }
+.task-title.done-text { text-decoration: line-through; color: var(--text-muted); }
+
+.task-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.task-due { font-size: var(--font-size-xs); color: var(--text-muted); white-space: nowrap; }
+.task-assignee { font-size: var(--font-size-xs); color: var(--text-muted); }
+.task-tag { font-size: var(--font-size-xs); background: var(--bg-tertiary); color: var(--text-secondary); padding: 1px 6px; border-radius: 999px; }
+
+/* Trash list */
+.trash-hint { color: var(--text-muted); font-size: var(--font-size-sm); margin-bottom: var(--spacing-md); }
+.trash-list .task-row { border-style: dashed; opacity: .7; }
+.trash-row-actions { display: flex; gap: 4px; flex-shrink: 0; }

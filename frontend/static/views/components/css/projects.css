@@ -1,0 +1,124 @@
+/* ============================================
+   projects.css — Project list & cards
+   ============================================ */
+
+.project-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.project-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.project-card:hover { background: var(--card-hover); transform: translateY(-2px); border-color: var(--color-primary); }
+.project-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.project-card-icon { font-size: 1.6rem; line-height: 1; }
+.project-card-menu { opacity: 0; transition: opacity var(--transition-fast); }
+.project-card:hover .project-card-menu { opacity: 1; }
+.project-card-name { font-size: var(--font-size-base); font-weight: 600; margin-top: 4px; }
+.project-card-desc { font-size: var(--font-size-sm); color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.project-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+.project-task-count { font-size: var(--font-size-xs); color: var(--text-muted); }
+
+/* Color strip at top */
+.project-card-color-strip {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* Progress bar */
+.project-progress-bar {
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.project-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-primary);
+  transition: width 0.4s ease;
+}
+.project-progress-label { font-size: var(--font-size-xs); color: var(--text-muted); }
+
+/* Archive badge */
+.badge-archived {
+  background: rgba(100,116,139,.2);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* Large icon for project detail */
+.project-icon-lg { font-size: 1.5rem; }
+
+/* Project detail header */
+.project-detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  flex-wrap: wrap;
+}
+.project-detail-title-row { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.project-detail-name { font-size: var(--font-size-xl); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-detail-actions { display: flex; gap: 6px; margin-left: auto; }
+
+/* Project tabs */
+.project-tabs {
+  display: flex;
+  gap: 4px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+.tab-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  display: flex; align-items: center; gap: 6px;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.tab-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.tab-btn.active { background: rgba(99,102,241,.15); color: var(--color-primary); }
+.project-tab-pane { padding: var(--spacing-lg); }
+
+/* Context dropdown menu */
+.dropdown-menu {
+  position: absolute;
+  right: 8px; top: 40px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  z-index: var(--z-dropdown);
+  min-width: 160px;
+  overflow: hidden;
+}
+.dropdown-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.dropdown-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.dropdown-item.danger { color: var(--color-danger); }

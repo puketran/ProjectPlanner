@@ -1,0 +1,61 @@
+/* ============================================
+   users.css — User selection screen
+   ============================================ */
+
+.users-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--spacing-xl);
+  gap: var(--spacing-xl);
+}
+.users-hero { text-align: center; }
+.users-hero-icon { font-size: 3rem; color: var(--color-primary); display: block; margin-bottom: var(--spacing-md); }
+.users-hero h1 { font-size: var(--font-size-2xl); font-weight: 700; margin-bottom: 8px; }
+.users-hero p { color: var(--text-secondary); }
+
+.users-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  justify-content: center;
+  max-width: 600px;
+}
+
+.user-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  min-width: 120px;
+  position: relative;
+}
+.user-card:hover { background: var(--card-hover); border-color: var(--color-primary); transform: translateY(-2px); }
+.user-avatar {
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, var(--color-primary), #8b5cf6);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; font-weight: 700; color: #fff;
+}
+.user-name { font-size: var(--font-size-sm); font-weight: 600; }
+.user-count { font-size: var(--font-size-xs); color: var(--text-muted); }
+.user-pin-badge { position: absolute; top: 8px; right: 8px; font-size: var(--font-size-xs); color: var(--text-muted); }
+
+/* PIN input modal */
+.pin-modal { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-md); padding: var(--spacing-lg); }
+.pin-dots { display: flex; gap: 12px; margin: var(--spacing-sm) 0; }
+.pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-color); background: transparent; transition: background var(--transition-fast), border-color var(--transition-fast); }
+.pin-dot.filled { background: var(--color-primary); border-color: var(--color-primary); }
+.pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 200px; }
+.pin-key { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; font-size: var(--font-size-lg); font-weight: 600; cursor: pointer; transition: background var(--transition-fast); }
+.pin-key:hover { background: var(--bg-hover); }
+.pin-error { color: var(--color-danger); font-size: var(--font-size-sm); }
