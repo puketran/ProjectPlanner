@@ -136,8 +136,18 @@
 .ms-task-chips {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 5px;
-  margin-top: 4px;
+  margin-top: 6px;
+}
+.ms-task-chips-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #3b82f6;
+  white-space: nowrap;
+  margin-right: 2px;
 }
 .ms-task-chip {
   font-size: 11px;
@@ -145,11 +155,12 @@
   border-radius: var(--radius-full);
   background: var(--bg-tertiary);
   color: var(--text-secondary);
-  max-width: 220px;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.ms-chip-status-in-progress { background: #3b82f620; color: #3b82f6; font-weight: 600; }
 .ms-task-chip-more {
   font-size: 11px;
   color: var(--text-muted);
@@ -512,6 +523,30 @@
   0%,100% { opacity: 1; }
   50%      { opacity: .65; }
 }
+.ms-bottleneck-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  background: #f9731620;
+  color: #ea6a00;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ms-orphan-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  background: #eab30820;
+  color: #ca8a04;
+  font-weight: 600;
+  white-space: nowrap;
+}
 .ms-click-hint {
   margin-left: auto;
   font-size: 11px;
@@ -585,7 +620,7 @@
 .msd-gantt-inner { display: flex; min-width: 0; }
 
 /* Left labels column */
-.msd-gantt-labels { width: 200px; flex-shrink: 0; border-right: 1px solid var(--border-color); background: var(--bg-secondary); }
+.msd-gantt-labels { width: 260px; flex-shrink: 0; border-right: 1px solid var(--border-color); background: var(--bg-secondary); overflow: hidden; }
 .msd-gl-hdr {
   height: 26px;
   display: flex;
@@ -610,16 +645,18 @@
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   transition: background 0.1s;
+  min-width: 0;
+  overflow: hidden;
 }
 .msd-gl-row:last-child { border-bottom: none; }
 .msd-gl-row:hover  { background: var(--bg-tertiary); color: var(--text-primary); }
 .msd-gl-blocked    { color: #ef4444; background: #ef44440a; }
 .msd-disc-tag      { font-size: 10px; font-weight: 700; flex-shrink: 0; }
-.msd-gl-title      { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.msd-gl-title      { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 
 /* Right track column */
-.msd-gantt-track { flex: 1; overflow-x: hidden; min-width: 0; }
-.msd-gantt-track-inner { width: 100%; min-width: 100%; }
+.msd-gantt-track { flex: 1; overflow-x: hidden; min-width: 0; user-select: none; -webkit-user-select: none; }
+.msd-gantt-track-inner { width: 100%; min-width: 0; }
 .msd-month-hdr {
   display: flex;
   height: 26px;
@@ -732,6 +769,7 @@
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-secondary);
   gap: 8px;
+  flex-wrap: wrap;
 }
 .msd-gt-label {
   font-size: 11px;
@@ -740,6 +778,45 @@
   text-transform: uppercase;
   color: var(--text-muted);
 }
+/* Deliverable focus indicator in toolbar */
+.msd-dl-focus-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary, #6366f1);
+  background: #6366f118;
+  border: 1px solid #6366f140;
+  border-radius: var(--radius-full);
+  padding: 2px 8px 2px 10px;
+  flex: 1;
+  min-width: 0;
+}
+.msd-dl-focus-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.msd-dl-focus-clear {
+  font-size: 11px;
+  color: var(--color-primary, #6366f1);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.msd-dl-focus-clear:hover { opacity: 1; }
+/* Gantt row dim/focus states */
+.msd-row-dimmed { opacity: 0.2; transition: opacity 0.15s; }
+.msd-row-focused {
+  background: #6366f10a !important;
+  outline: none;
+}
+/* Deliverable focus button active state */
+.msd-dl-focus-btn { opacity: 0; transition: opacity 0.1s, color 0.1s; }
+.msd-dl-item:hover .msd-dl-focus-btn { opacity: 0.6; }
+.msd-dl-focus-btn:hover { opacity: 1 !important; color: var(--color-primary, #6366f1); }
+.msd-dl-focus-active { opacity: 1 !important; color: var(--color-primary, #6366f1) !important; }
 .msd-mode-toggle {
   display: flex;
   gap: 2px;
@@ -887,4 +964,424 @@
   color: var(--text-muted);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* Bar placeholder for tasks whose dates are outside the view range */
+.msd-bar-outside {
+  display: none;
+}
+
+/* ── Deliverables section ────────────────────────────────── */
+.msd-deliverables {
+  border-top: 1px solid var(--border-color);
+  padding: 10px 0 6px;
+}
+.msd-dl-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  padding: 0 0 6px;
+}
+.msd-dl-count {
+  font-size: 10px;
+  padding: 1px 6px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+}
+.msd-dl-add { opacity: 0.6; font-size: 12px; }
+.msd-dl-add:hover { opacity: 1; color: var(--color-primary, #6366f1); }
+/* Deliverable item — new layout with linked tasks */
+.msd-dl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 5px 6px;
+  border-radius: var(--radius);
+  transition: background 0.1s;
+}
+.msd-dl-item:hover { background: var(--bg-secondary); }
+.msd-dl-item.msd-dl-done { opacity: 0.55; }
+
+/* Deliverable drag handle */
+.msd-dl-drag-handle {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding-top: 2px;
+  opacity: 0;
+  cursor: grab;
+  transition: opacity 0.1s;
+}
+.msd-dl-item:hover .msd-dl-drag-handle { opacity: 0.5; }
+.msd-dl-drag-handle:hover { opacity: 1 !important; }
+.msd-dl-drag-handle:active { cursor: grabbing; }
+
+/* Deliverable being dragged */
+.msd-dl-dragging {
+  opacity: 0.35;
+  outline: 2px dashed var(--border-color);
+  border-radius: var(--radius);
+}
+
+/* Drop-zone highlight on OTHER milestone deliverable containers */
+.msd-dl-items.msd-dl-drop-target {
+  outline: 2px dashed var(--color-primary, #6366f1);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+  background: #6366f106;
+}
+.msd-dl-items.msd-dl-drop-over {
+  outline: 2px solid var(--color-primary, #6366f1);
+  background: #6366f10d;
+}
+
+.msd-dl-check-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  padding-top: 1px;
+}
+.msd-dl-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.msd-dl-text {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.msd-dl-text-done { text-decoration: line-through; color: var(--text-muted); }
+/* Linked task chips inside a deliverable */
+.msd-dl-tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.msd-dl-task-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.msd-dl-tc-done         { background: #22c55e20; color: #16a34a; }
+.msd-dl-tc-in-progress  { background: #3b82f620; color: #2563eb; }
+.msd-dl-tc-blocked      { background: #ef444420; color: #dc2626; }
+.msd-dl-tc-todo         { background: #6b728020; color: #6b7280; }
+/* Manual-check button (only on unlinked deliverables) */
+.msd-dl-check {
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  padding: 2px;
+  font-size: 12px;
+  opacity: 0.5;
+}
+.msd-dl-check:hover { opacity: 1; color: #22c55e; }
+/* Link button */
+.msd-dl-link-btn {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0;
+  padding: 2px;
+  transition: opacity 0.1s, color 0.1s;
+}
+.msd-dl-item:hover .msd-dl-link-btn { opacity: 0.6; }
+.msd-dl-link-btn:hover { opacity: 1 !important; color: var(--color-primary, #6366f1); }
+.msd-dl-remove {
+  opacity: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 2px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.1s, color 0.1s;
+}
+.msd-dl-item:hover .msd-dl-remove { opacity: 0.6; }
+.msd-dl-remove:hover { opacity: 1 !important; color: #ef4444; }
+.msd-dl-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 4px 6px;
+}
+/* Add-deliverable row */
+.msd-dl-add-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+.msd-dl-add-actions {
+  display: flex;
+  gap: 6px;
+}
+.msd-dl-input {
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+.msd-dl-input:focus { outline: none; border-color: var(--color-primary, #6366f1); }
+/* Task picker inside add / link panels */
+.msd-dl-task-picker,
+.msd-dl-link-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+.msd-dl-link-picker {
+  margin-top: 6px;
+}
+.msd-dl-picker-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.msd-dl-task-opt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition: background 0.1s;
+}
+.msd-dl-task-opt:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.msd-dl-task-opt-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Task list filter toggle ─────────────────────────────── */
+.msd-tl-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  padding: 8px 0 4px;
+  border-top: 1px solid var(--border-color);
+}
+.msd-tl-filter-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+  padding: 2px;
+}
+.msd-tl-filter-btn {
+  background: none;
+  border: none;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  transition: background 0.12s, color 0.12s;
+}
+.msd-tl-filter-btn.active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+.msd-tl-filter-btn:not(.active):hover { color: var(--text-primary); }
+
+/* ── Week-level header (visible at zoom ≥ 1.5) ───────────── */
+.msd-week-hdr {
+  display: flex;
+  height: 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+.msd-week-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-color);
+  flex-shrink: 0;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.msd-week-cell:last-child { border-right: none; }
+
+/* ── Day-level header (visible at zoom ≥ 3) ──────────────── */
+.msd-day-hdr {
+  display: flex;
+  height: 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+.msd-day-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-color);
+  flex-shrink: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.msd-day-cell:last-child { border-right: none; }
+
+/* ── Deliverable popup overlay ────────────────────────────── */
+.msd-dl-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.msd-dl-popup {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl, 0 20px 60px rgba(0,0,0,0.5));
+  width: 100%;
+  max-width: 920px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.msd-dl-popup-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.msd-dl-popup-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  background: transparent;
+  border-color: transparent;
+  padding: 4px 8px;
+}
+.msd-dl-popup-name:focus {
+  border-color: var(--color-primary, #6366f1);
+  background: var(--bg-primary);
+}
+.msd-dl-popup-status {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.msd-dl-popup-done { color: #22c55e; }
+.msd-dl-popup-close { flex-shrink: 0; }
+
+/* Scrollable popup body */
+.msd-dl-popup-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Zoom toolbar inside popup */
+.msd-dl-popup-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+.msd-dl-pz-lvl {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 28px;
+  text-align: center;
+}
+
+/* Gantt inside popup */
+.msd-dl-popup-gantt {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border: none;
+}
+.msd-dl-popup-labels {
+  overflow-y: auto;
+}
+.msd-dl-popup-track {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-width: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.msd-dl-popup-track-inner {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Hint footer */
+.msd-dl-popup-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 6px 14px 8px;
+  margin: 0;
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
 }

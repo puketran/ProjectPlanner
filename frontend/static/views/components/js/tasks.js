@@ -408,6 +408,7 @@
         _touch(projectId);
         window.renderTasks(projectId);
         if (typeof window.renderDashboard === 'function') window.renderDashboard();
+        if (typeof window.refreshOpenMilestoneDetails === 'function') window.refreshOpenMilestoneDetails(projectId);
       });
     });
 
@@ -492,9 +493,11 @@
       if (count) count.textContent = filtered.length;
       cards.innerHTML = filtered.map(t => {
         const overdue = _isOverdue(t);
+        const abbr    = t.discipline ? _discAbbrev(t.discipline) : '';
+        const dc      = t.discipline && typeof window.getDiscColor === 'function' ? window.getDiscColor(t.discipline) : '#8b5cf6';
         return `
           <div class="kanban-card ${overdue ? 'overdue' : ''}" data-task-id="${t.id}" draggable="true">
-            <div class="kanban-card-title">${esc(t.title)}</div>
+            <div class="kanban-card-title">${abbr ? `<span class="task-disc-pfx" style="color:${dc}">[${esc(abbr)}]</span> ` : ''}${esc(t.title)}</div>
             ${t.due_date ? `<div class="kanban-card-due ${overdue?'overdue':''}"><i class="fa fa-calendar-days"></i> ${_fmtDate(t.due_date)}</div>` : ''}
             <div class="kanban-card-footer">
               <i class="fa ${PRIORITY_ICONS[t.priority]||''}" title="${t.priority||''}"></i>
@@ -535,6 +538,8 @@
           // Update detail panel if open
           if (window.currentTaskId === _dragTaskId && typeof window.refreshDetailPanel === 'function')
             window.refreshDetailPanel();
+          if (typeof window.refreshOpenMilestoneDetails === 'function')
+            window.refreshOpenMilestoneDetails(projectId);
         }
       });
     });

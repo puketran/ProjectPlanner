@@ -72,6 +72,16 @@ def save_projects():
         return jsonify({'error': 'user_id required'}), 400
     project_ids = []
     for pid, project in projects.items():
+        # Never overwrite a project that already belongs to a different user
+        existing_path = _project_path(pid)
+        if existing_path.exists():
+            existing = read_json(existing_path)
+            if existing.get('user_id') and existing['user_id'] != user_id:
+                continue  # skip — belongs to another user
+        # Only save if the project's own user_id matches the requester
+        project_owner = project.get('user_id')
+        if project_owner and project_owner != user_id:
+            continue  # client sent another user's project — skip it
         project['user_id'] = user_id
         write_json(_project_path(pid), project)
         project_ids.append(pid)

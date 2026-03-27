@@ -58,13 +58,18 @@
   async function _syncToServer() {
     if (!window.appData.currentUser) return;
     _setSyncStatus('saving');
+    // Only send projects belonging to the current user
+    const uid = window.appData.currentUser.id;
+    const myProjects = Object.fromEntries(
+      Object.entries(window.appData.projects).filter(([, p]) => !p.user_id || p.user_id === uid)
+    );
     try {
       const r = await fetch('/api/projects/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id:  window.appData.currentUser.id,
-          projects: window.appData.projects
+          user_id:  uid,
+          projects: myProjects
         })
       });
       _setSyncStatus(r.ok ? 'saved' : 'error');
@@ -99,7 +104,8 @@
       if (!r.ok) return;
       const data = await r.json();
       for (const meta of data.projects || []) {
-        if (window.appData.projects[meta.id]) continue; // already have locally
+        // Always fetch the full project for this user from server
+        // (localStorage may be stale or belong to a previous session)
         const fr = await fetch('/api/projects/export?project_id=' + meta.id);
         if (fr.ok) {
           const full = await fr.json();

@@ -47,9 +47,10 @@
     const toolbar = `
       <div class="ms-toolbar">
         <span class="ms-toolbar-title"><i class="fa fa-flag"></i> Milestones</span>
-        <button class="btn btn-primary btn-sm" id="btn-new-milestone">
-          <i class="fa fa-plus"></i> New Milestone
-        </button>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn btn-ghost btn-sm" id="btn-collapse-all" title="Collapse all" style="display:none"><i class="fa fa-chevrons-up"></i> Collapse all</button>
+          <button class="btn btn-primary btn-sm" id="btn-new-milestone"><i class="fa fa-plus"></i> New Milestone</button>
+        </div>
       </div>`;
 
     if (milestones.length === 0) {
@@ -77,6 +78,18 @@
             wdLeft < 0  ? `<span class="ms-wdl-badge ms-wdl-overdue"><i class="fa fa-clock"></i> Overdue ${Math.abs(wdLeft)}d</span>` :
             wdLeft === 0 ? `<span class="ms-wdl-badge ms-wdl-today"><i class="fa fa-clock"></i> Due Today</span>` :
             `<span class="ms-wdl-badge"><i class="fa fa-clock"></i> ${wdLeft}wd left</span>`;
+
+          // Bottleneck detection (pairs of dependent tasks whose dates overlap)
+          let bottleneckCount = 0;
+          if (ms.start_date && ms.end_date && typeof window._msdDetectBottlenecks === 'function') {
+            const msS = new Date(ms.start_date + 'T00:00:00');
+            const msE = new Date(ms.end_date   + 'T00:00:00');
+            if (msE > msS) bottleneckCount = window._msdDetectBottlenecks(msTasks, msS, msE).length;
+          }
+
+          // Orphan deliverables: deliverables with no linked tasks (no one owns them)
+          const deliverables = ms.deliverables || [];
+          const orphanDl = deliverables.filter(d => !d.task_ids || d.task_ids.length === 0).length;
           return `
             <div class="ms-card-item" data-ms-id="${ms.id}">
               <div class="ms-card" data-ms-id="${ms.id}" draggable="true">
@@ -104,23 +117,23 @@
                   ${ms.description ? `<p class="ms-desc">${esc(ms.description)}</p>` : ''}
                   <div class="ms-card-meta-row">
                     ${wdBadge}
-                    ${blocked > 0 ? `<span class="ms-blocked-badge"><i class="fa fa-triangle-exclamation"></i> ${blocked} blocked</span>` : ''}
+                    ${blocked > 0 ? `<span class="ms-blocked-badge"><i class="fa fa-circle-xmark"></i> ${blocked} blocked</span>` : ''}
+                    ${bottleneckCount > 0 ? `<span class="ms-bottleneck-badge"><i class="fa fa-code-branch"></i> ${bottleneckCount} bottleneck${bottleneckCount>1?'s':''}</span>` : ''}
+                    ${orphanDl > 0 ? `<span class="ms-orphan-badge"><i class="fa fa-box-archive"></i> ${orphanDl} unowned deliverable${orphanDl>1?'s':''}</span>` : ''}
                     <span class="ms-click-hint"><i class="fa fa-chevron-down"></i> View details</span>
                   </div>
-                  ${msTasks.length > 0 ? `
-                    <div class="ms-progress-row">
-                      <div class="ms-progress-track">
-                        <div class="ms-progress-fill" style="width:${pct}%;background:${esc(color)}"></div>
-                      </div>
-                      <span class="ms-progress-pct">${pct}%</span>
-                    </div>
+                  ${msTasks.length > 0 ? (() => {
+                    const inProgress = msTasks.filter(t => t.status === 'in-progress');
+                    if (!inProgress.length) return '';
+                    return `
                     <div class="ms-task-chips">
-                      ${msTasks.slice(0, 6).map(t => `
-                        <span class="ms-task-chip ms-chip-status-${t.status}" title="${esc(t.title)}">${esc(t.title.length > 30 ? t.title.slice(0, 30) + '…' : t.title)}</span>
+                      <span class="ms-task-chips-label"><i class="fa fa-spinner"></i> In Progress:</span>
+                      ${inProgress.slice(0, 5).map(t => `
+                        <span class="ms-task-chip ms-chip-status-in-progress" title="${esc(t.title)}">${esc(t.title)}</span>
                       `).join('')}
-                      ${msTasks.length > 6 ? `<span class="ms-task-chip-more">+${msTasks.length - 6} more</span>` : ''}
-                    </div>
-                  ` : ''}
+                      ${inProgress.length > 5 ? `<span class="ms-task-chip-more">+${inProgress.length - 5} more</span>` : ''}
+                    </div>`;
+                  })() : ''}
                 </div>
               </div>
               <div class="ms-inline-detail" id="msd-inner-${ms.id}"></div>
@@ -136,21 +149,30 @@
       </div>`;
 
     document.getElementById('btn-new-milestone').onclick = () => window.showCreateMilestoneModal(projectId);
+    const collapseAllBtn = document.getElementById('btn-collapse-all');
+    if (collapseAllBtn) {
+      collapseAllBtn.onclick = () => {
+        container.querySelectorAll('.ms-inline-detail.msd-open').forEach(p => p.classList.remove('msd-open'));
+        container.querySelectorAll('.ms-card-item.ms-expanded').forEach(c => {
+          c.classList.remove('ms-expanded');
+          c.querySelectorAll('.ms-expand-icon').forEach(i => i.classList.remove('rotated'));
+        });
+        collapseAllBtn.style.display = 'none';
+      };
+    }
 
-    // ─ Toggle inline detail ──────────────────────────────
+    // ─ Toggle inline detail (multiple can be open simultaneously) ──
     function _toggleInlineDetail(cnt, pid, card) {
       const msId  = card.dataset.msId;
       const item  = card.closest('.ms-card-item');
       const panel = item ? item.querySelector('.ms-inline-detail') : null;
       if (!panel) return;
       const wasOpen = panel.classList.contains('msd-open');
-      // Close all open panels first
-      cnt.querySelectorAll('.ms-inline-detail.msd-open').forEach(p => p.classList.remove('msd-open'));
-      cnt.querySelectorAll('.ms-card-item.ms-expanded').forEach(c => {
-        c.classList.remove('ms-expanded');
-        c.querySelectorAll('.ms-expand-icon').forEach(i => i.classList.remove('rotated'));
-      });
-      if (!wasOpen) {
+      if (wasOpen) {
+        panel.classList.remove('msd-open');
+        item.classList.remove('ms-expanded');
+        card.querySelectorAll('.ms-expand-icon').forEach(i => i.classList.remove('rotated'));
+      } else {
         panel.classList.add('msd-open');
         item.classList.add('ms-expanded');
         card.querySelectorAll('.ms-expand-icon').forEach(i => i.classList.add('rotated'));
@@ -158,6 +180,9 @@
           window.openMilestoneDetail(pid, msId, panel);
         setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
       }
+      // Show/hide collapse-all button
+      const collapseBtn = cnt.querySelector('#btn-collapse-all');
+      if (collapseBtn) collapseBtn.style.display = cnt.querySelectorAll('.ms-inline-detail.msd-open').length > 0 ? '' : 'none';
     }
 
     // ─ Drag to reorder ───────────────────────────────────
@@ -253,6 +278,14 @@
           <label class="form-label">Description</label>
           <textarea id="ms-desc" class="form-textarea" placeholder="What happens in this phase?" rows="2">${ms ? esc(ms.description || '') : ''}</textarea>
         </div>
+        <div class="form-group">
+          <label class="form-label">Deliverables</label>
+          <div id="ms-dl-list" style="margin-bottom:6px"></div>
+          <div style="display:flex;gap:6px">
+            <input id="ms-dl-input" type="text" class="form-input" placeholder="Add deliverable…" style="flex:1">
+            <button type="button" id="ms-dl-add-btn" class="btn btn-secondary btn-sm"><i class="fa fa-plus"></i></button>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="window.closeModal()">Cancel</button>
@@ -268,6 +301,30 @@
       });
     });
 
+    // Deliverables list
+    let dlList = ms ? JSON.parse(JSON.stringify(ms.deliverables || [])) : [];
+    function _refreshDlList() {
+      const listEl = document.getElementById('ms-dl-list');
+      if (!listEl) return;
+      listEl.innerHTML = dlList.length
+        ? dlList.map((d, i) => `<div style="display:flex;align-items:center;gap:6px;padding:3px 0"><span style="flex:1;font-size:13px">${esc(d.text)}</span><button type="button" class="icon-btn text-danger ms-dl-rm" data-idx="${i}"><i class="fa fa-xmark"></i></button></div>`).join('')
+        : '<p style="font-size:12px;color:var(--text-muted);margin:2px 0">No deliverables yet</p>';
+      listEl.querySelectorAll('.ms-dl-rm').forEach(btn => {
+        btn.onclick = () => { dlList.splice(parseInt(btn.dataset.idx, 10), 1); _refreshDlList(); };
+      });
+    }
+    _refreshDlList();
+    const dlInput   = document.getElementById('ms-dl-input');
+    const _doAddDl  = () => {
+      const text = dlInput?.value.trim();
+      if (!text) return;
+      dlList.push({ id: 'dl_' + Date.now() + '_' + Math.random().toString(36).slice(2), text, done: false });
+      if (dlInput) dlInput.value = '';
+      _refreshDlList();
+    };
+    document.getElementById('ms-dl-add-btn')?.addEventListener('click', _doAddDl);
+    dlInput?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); _doAddDl(); } });
+
     const titleInput = document.getElementById('ms-title');
     const doSave = () => {
       const title = titleInput.value.trim();
@@ -277,17 +334,18 @@
       const desc  = document.getElementById('ms-desc').value.trim();
       const now   = window.isoNow();
       if (isEdit) {
-        ms.title       = title;
-        ms.start_date  = start;
-        ms.end_date    = end;
-        ms.color       = selColor;
-        ms.description = desc;
-        ms.updated_at  = now;
+        ms.title        = title;
+        ms.start_date   = start;
+        ms.end_date     = end;
+        ms.color        = selColor;
+        ms.description  = desc;
+        ms.deliverables = dlList;
+        ms.updated_at   = now;
       } else {
         proj.milestones = proj.milestones || [];
         proj.milestones.push({
           id: window.uid('ms'), title, start_date: start, end_date: end,
-          color: selColor, description: desc, created_at: now, updated_at: now
+          color: selColor, description: desc, deliverables: dlList, created_at: now, updated_at: now
         });
       }
       proj.updated_at = now;
