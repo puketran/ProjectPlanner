@@ -138,6 +138,9 @@
     });
 
     // ── Projects view ────────────────────────────────────────
+    _on('btn-import-project', 'click', () => {
+      if (typeof window.importProject === 'function') window.importProject();
+    });
     _on('btn-new-project', 'click', () => {
       if (typeof window.showCreateProjectModal === 'function') window.showCreateProjectModal();
     });

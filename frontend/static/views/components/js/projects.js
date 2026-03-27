@@ -455,18 +455,134 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function (e) {
+        let data;
         try {
-          const data = JSON.parse(e.target.result);
-          if (!data.id) { alert('Invalid project file.'); return; }
-          data.user_id = window.appData.currentUser.id;
-          window.appData.projects[data.id] = data;
-          window.saveData();
-          window.renderProjects();
-          if (typeof window.renderSidebarProjects === 'function') window.renderSidebarProjects();
-        } catch (_) { alert('Could not parse project file.'); }
+          data = JSON.parse(e.target.result);
+        } catch (_) {
+          _importError('Could not parse the file. Make sure it is a valid JSON project export.');
+          return;
+        }
+        if (!data || typeof data !== 'object' || !data.id || !data.name) {
+          _importError('This file does not appear to be a valid project export (missing id or name).');
+          return;
+        }
+        _showImportPreview(data);
       };
       reader.readAsText(file);
     };
     input.click();
   };
+
+  function _importError(msg) {
+    window.openModal(`
+      <div class="modal-header">
+        <span class="modal-title"><i class="fa fa-triangle-exclamation"></i> Import Failed</span>
+        <button class="modal-close" onclick="window.closeModal()"><i class="fa fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--color-danger)">${esc(msg)}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="window.closeModal()">OK</button>
+      </div>
+    `);
+  }
+
+  function _showImportPreview(data) {
+    const tasks      = (data.tasks || []).filter(t => !t.deleted);
+    const milestones = (data.milestones || []);
+    const notes      = (data.notes || []);
+    const duplicate  = !!window.appData.projects[data.id];
+
+    const dupWarning = duplicate ? `
+      <div class="import-preview-warning">
+        <i class="fa fa-triangle-exclamation"></i>
+        A project with this ID already exists in your workspace.
+        Choose how to handle it below.
+      </div>` : '';
+
+    window.openModal(`
+      <div class="modal-header">
+        <span class="modal-title"><i class="fa fa-file-import"></i> Import Project</span>
+        <button class="modal-close" onclick="window.closeModal()"><i class="fa fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        ${dupWarning}
+        <div class="import-preview-card">
+          <div class="import-preview-icon">${data.icon || '📁'}</div>
+          <div class="import-preview-info">
+            <div class="import-preview-name">${esc(data.name)}</div>
+            ${data.description ? `<div class="import-preview-desc">${esc(data.description)}</div>` : ''}
+            <div class="import-preview-meta">
+              <span><i class="fa fa-check-square"></i> ${tasks.length} task${tasks.length !== 1 ? 's' : ''}</span>
+              <span><i class="fa fa-flag"></i> ${milestones.length} milestone${milestones.length !== 1 ? 's' : ''}</span>
+              <span><i class="fa fa-note-sticky"></i> ${notes.length} note${notes.length !== 1 ? 's' : ''}</span>
+            </div>
+            ${data.start_date || data.end_date ? `
+              <div class="import-preview-dates">
+                ${data.start_date ? `<span><i class="fa fa-calendar"></i> ${data.start_date}</span>` : ''}
+                ${data.end_date   ? `<span>→ ${data.end_date}</span>` : ''}
+              </div>` : ''}
+          </div>
+        </div>
+        ${duplicate ? `
+          <div class="form-group" style="margin-top:1rem">
+            <label class="form-label">Import as</label>
+            <div class="import-mode-options">
+              <label class="import-mode-option">
+                <input type="radio" name="import-mode" value="copy" checked />
+                <span><strong>New copy</strong> — import with a new ID (keeps existing project)</span>
+              </label>
+              <label class="import-mode-option">
+                <input type="radio" name="import-mode" value="overwrite" />
+                <span><strong>Overwrite</strong> — replace the existing project</span>
+              </label>
+            </div>
+          </div>` : ''}
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="window.closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="import-confirm-btn"><i class="fa fa-file-import"></i> Import</button>
+      </div>
+    `);
+
+    document.getElementById('import-confirm-btn').onclick = function () {
+      const mode = duplicate
+        ? document.querySelector('input[name="import-mode"]:checked').value
+        : 'overwrite';
+      _doImport(data, mode);
+    };
+  }
+
+  function _doImport(data, mode) {
+    const uid = window.appData.currentUser.id;
+    const importData = JSON.parse(JSON.stringify(data));
+    importData.user_id = uid;
+
+    if (mode === 'copy') {
+      const newId = window.uid('proj');
+      importData.id   = newId;
+      importData.name = importData.name + ' (imported)';
+    }
+
+    // Save to local state
+    window.appData.projects[importData.id] = importData;
+
+    // Persist to backend
+    const blob = new Blob([JSON.stringify(importData)], { type: 'application/json' });
+    const formData = new FormData();
+    formData.append('file', blob, importData.id + '.json');
+    formData.append('user_id', uid);
+    fetch('/api/projects/import', { method: 'POST', body: formData })
+      .catch(() => { /* non-fatal — local state is already updated */ });
+
+    window.saveData();
+    window.closeModal();
+    window.renderProjects();
+    if (typeof window.renderSidebarProjects === 'function') window.renderSidebarProjects();
+
+    if (typeof window.showToast === 'function') {
+      window.showToast('"' + importData.name + '" imported successfully.');
+    }
+  }
 })();
