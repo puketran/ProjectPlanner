@@ -32,15 +32,12 @@ def _rand(k=5) -> str:
 
 @projects_bp.route('', methods=['GET'])
 def list_projects():
-    user_id = request.args.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'user_id required'}), 400
     project_files = list_project_files(get_data_dir())
     projects = []
     for pf in project_files:
         try:
             p = read_json(pf)
-            if p.get('user_id') != user_id or p.get('status') == 'deleted':
+            if p.get('status') == 'deleted':
                 continue
             tasks = [t for t in p.get('tasks', []) if not t.get('deleted')]
             total = len(tasks)
@@ -70,32 +67,8 @@ def save_projects():
     projects = data.get('projects', {})
     if not user_id:
         return jsonify({'error': 'user_id required'}), 400
-    project_ids = []
     for pid, project in projects.items():
-        # Never overwrite a project that already belongs to a different user
-        existing_path = _project_path(pid)
-        if existing_path.exists():
-            existing = read_json(existing_path)
-            if existing.get('user_id') and existing['user_id'] != user_id:
-                continue  # skip — belongs to another user
-        # Only save if the project's own user_id matches the requester
-        project_owner = project.get('user_id')
-        if project_owner and project_owner != user_id:
-            continue  # client sent another user's project — skip it
-        project['user_id'] = user_id
         write_json(_project_path(pid), project)
-        project_ids.append(pid)
-    # Update user's project list
-    users_path = Path(get_data_dir()) / 'users.json'
-    users_data = read_json(users_path)
-    if isinstance(users_data, list):
-        for user in users_data:
-            if user['id'] == user_id:
-                existing = set(user.get('projects', []))
-                existing.update(project_ids)
-                user['projects'] = list(existing)
-                break
-        write_json(users_path, users_data)
     return jsonify({'success': True})
 
 

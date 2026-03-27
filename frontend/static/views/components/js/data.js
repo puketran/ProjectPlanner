@@ -58,18 +58,14 @@
   async function _syncToServer() {
     if (!window.appData.currentUser) return;
     _setSyncStatus('saving');
-    // Only send projects belonging to the current user
     const uid = window.appData.currentUser.id;
-    const myProjects = Object.fromEntries(
-      Object.entries(window.appData.projects).filter(([, p]) => !p.user_id || p.user_id === uid)
-    );
     try {
       const r = await fetch('/api/projects/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id:  uid,
-          projects: myProjects
+          projects: window.appData.projects
         })
       });
       _setSyncStatus(r.ok ? 'saved' : 'error');
@@ -100,12 +96,11 @@
   // ─── Load projects from server on startup ─────────────────
   window.loadProjectsFromServer = async function (userId) {
     try {
-      const r = await fetch('/api/projects?user_id=' + userId);
+      const r = await fetch('/api/projects');
       if (!r.ok) return;
       const data = await r.json();
       for (const meta of data.projects || []) {
-        // Always fetch the full project for this user from server
-        // (localStorage may be stale or belong to a previous session)
+        // Always fetch the full project from server
         const fr = await fetch('/api/projects/export?project_id=' + meta.id);
         if (fr.ok) {
           const full = await fr.json();
@@ -130,10 +125,7 @@
   };
 
   window.getUserProjects = function (statusFilter) {
-    if (!window.appData.currentUser) return [];
-    const uid = window.appData.currentUser.id;
     return Object.values(window.appData.projects).filter(p => {
-      if (p.user_id !== uid) return false;
       if (p.status === 'deleted') return false;
       if (statusFilter === 'active')   return p.status !== 'archived';
       if (statusFilter === 'archived') return p.status === 'archived';

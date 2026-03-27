@@ -557,7 +557,6 @@
   function _doImport(data, mode) {
     const uid = window.appData.currentUser.id;
     const importData = JSON.parse(JSON.stringify(data));
-    importData.user_id = uid;
 
     if (mode === 'copy') {
       const newId = window.uid('proj');
