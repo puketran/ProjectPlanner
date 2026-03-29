@@ -65,9 +65,12 @@
 
     const unassigned = tasks.filter(t => !t.milestone_id);
 
+    // Sort: pinned milestones first
+    const sortedMilestones = [...milestones].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+
     container.innerHTML = toolbar + `
       <div class="ms-list">
-        ${milestones.map(ms => {
+        ${sortedMilestones.map(ms => {
           const msTasks = tasks.filter(t => t.milestone_id === ms.id);
           const done    = msTasks.filter(t => t.status === 'done').length;
           const blocked = msTasks.filter(t => t.status === 'blocked').length;
@@ -92,7 +95,7 @@
           const orphanDl = deliverables.filter(d => !d.task_ids || d.task_ids.length === 0).length;
           return `
             <div class="ms-card-item" data-ms-id="${ms.id}">
-              <div class="ms-card" data-ms-id="${ms.id}" draggable="true">
+              <div class="ms-card${ms.pinned ? ' ms-pinned' : ''}" data-ms-id="${ms.id}" draggable="true">
                 <div class="ms-drag-handle" title="Drag to reorder"><i class="fa fa-grip-vertical"></i></div>
                 <div class="ms-card-stripe" style="background:${esc(color)}"></div>
                 <div class="ms-card-body">
@@ -103,6 +106,7 @@
                       <span class="ms-task-count">${msTasks.length} task${msTasks.length !== 1 ? 's' : ''}</span>
                     </div>
                     <div class="ms-card-actions">
+                      <button class="icon-btn ms-pin-btn${ms.pinned ? ' ms-pin-active' : ''}" data-ms-id="${ms.id}" title="${ms.pinned ? 'Unpin milestone' : 'Pin milestone'}"><i class="fa fa-thumbtack"></i></button>
                       <button class="icon-btn ms-expand-btn" title="Expand detail"><i class="fa fa-chevron-down ms-expand-icon"></i></button>
                       <button class="icon-btn ms-edit-btn" data-ms-id="${ms.id}" title="Edit milestone"><i class="fa fa-pen"></i></button>
                       <button class="icon-btn ms-delete-btn text-danger" data-ms-id="${ms.id}" title="Delete milestone"><i class="fa fa-trash"></i></button>
@@ -217,7 +221,7 @@
       });
       // Click on card body → toggle inline sub-view
       card.querySelector('.ms-card-body').addEventListener('click', function (e) {
-        if (e.target.closest('.ms-edit-btn') || e.target.closest('.ms-delete-btn') || e.target.closest('.ms-expand-btn')) return;
+        if (e.target.closest('.ms-edit-btn') || e.target.closest('.ms-delete-btn') || e.target.closest('.ms-expand-btn') || e.target.closest('.ms-pin-btn')) return;
         _toggleInlineDetail(container, projectId, card);
       });
       const expandBtn = card.querySelector('.ms-expand-btn');
@@ -232,6 +236,18 @@
     });
     container.querySelectorAll('.ms-delete-btn').forEach(btn => {
       btn.addEventListener('click', e => { e.stopPropagation(); _confirmDeleteMilestone(projectId, btn.dataset.msId); });
+    });
+    container.querySelectorAll('.ms-pin-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const fp = window.getProject(projectId);
+        const fm = fp && (fp.milestones || []).find(m => m.id === btn.dataset.msId);
+        if (!fm) return;
+        fm.pinned = !fm.pinned;
+        fp.updated_at = window.isoNow();
+        window.saveData();
+        window.renderMilestones(projectId);
+      });
     });
   };
 

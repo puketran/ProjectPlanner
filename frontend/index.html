@@ -171,18 +171,18 @@
 
         <!-- Tabs: Team Board | Tasks | Milestones | Notes | Trash -->
         <div class="project-tabs">
-          <button class="tab-btn" data-tab="team-board"><i class="fa fa-users"></i> Team Board</button>
-          <button class="tab-btn active" data-tab="tasks"><i class="fa fa-check-square"></i> Tasks</button>
+          <button class="tab-btn active" data-tab="team-board"><i class="fa fa-users"></i> Team Board</button>
+          <button class="tab-btn" data-tab="tasks"><i class="fa fa-check-square"></i> Tasks</button>
           <button class="tab-btn" data-tab="milestones"><i class="fa fa-flag"></i> Milestones</button>
           <button class="tab-btn" data-tab="notes"><i class="fa fa-note-sticky"></i> Notes</button>
           <button class="tab-btn" data-tab="trash"><i class="fa fa-trash-can"></i> Trash</button>
         </div>
 
         <!-- TEAM BOARD TAB -->
-        <div id="project-tab-team-board" class="project-tab-pane hidden"></div>
+        <div id="project-tab-team-board" class="project-tab-pane"></div>
 
         <!-- TASKS TAB -->
-        <div id="project-tab-tasks" class="project-tab-pane">
+        <div id="project-tab-tasks" class="project-tab-pane hidden">
           <div class="tasks-toolbar">
             <div class="tasks-toolbar-left">
               <input id="task-search" type="text" class="input-sm" placeholder="Search tasks…" />
@@ -415,6 +415,16 @@
           <div class="dp-field">
             <span class="dp-field-label"><i class="fa fa-calendar"></i> Due Date</span>
             <input id="dp-due-date" type="date" class="input-sm" />
+          </div>
+          <div class="dp-field">
+            <span class="dp-field-label"><i class="fa fa-clock"></i> Workdays Needed</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <input id="dp-workdays" type="number" class="input-sm" min="0" step="0.5" placeholder="—" style="width:80px" />
+              <select id="dp-workdays-unit" class="select-sm" style="width:80px">
+                <option value="days">days</option>
+                <option value="weeks">weeks</option>
+              </select>
+            </div>
           </div>
           <div class="dp-field">
             <span class="dp-field-label"><i class="fa fa-user"></i> Assignee</span>

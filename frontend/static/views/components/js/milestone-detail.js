@@ -8,6 +8,7 @@
 
   const SC = { 'todo':'#6b7280','in-progress':'#3b82f6','blocked':'#ef4444','done':'#22c55e' };
   const SL = { 'todo':'Todo','in-progress':'In Progress','blocked':'Blocked','done':'Done' };
+  const DL_SL = { 'todo':'To Do','in-progress':'In Progress','completed':'Completed' };
   const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   // Module-level deliverable drag state (readable during dragover)
@@ -31,13 +32,22 @@
     return isNaN(dt) ? d : dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric'});
   }
 
-  /** Compute deliverable done state — auto-derived from linked tasks if any */
+  /** Compute deliverable status — auto-derived from linked tasks if any, else manual */
+  function _dlStatus(dl, tasks) {
+    if (dl.task_ids && dl.task_ids.length > 0) {
+      const linked = dl.task_ids.map(id => tasks.find(t => t.id === id)).filter(Boolean);
+      if (linked.length > 0) {
+        if (linked.every(t => t.status === 'done')) return 'completed';
+        if (linked.some(t => t.status === 'in-progress' || t.status === 'blocked')) return 'in-progress';
+        return 'todo';
+      }
+    }
+    return dl.status || (dl.done ? 'completed' : 'todo');
+  }
+
+  /** Backward-compat: true when deliverable is completed */
   function _dlDone(dl, tasks) {
-    if (!dl.task_ids || dl.task_ids.length === 0) return !!dl.done;
-    return dl.task_ids.every(id => {
-      const t = tasks.find(t => t.id === id);
-      return t && t.status === 'done';
-    });
+    return _dlStatus(dl, tasks) === 'completed';
   }
 
   // ─── Public API ───────────────────────────────────────────
@@ -181,19 +191,34 @@
           </div>
           <div class="msd-dl-items" data-ms-id="${esc(ms.id)}">
             ${deliverables.map(d => {
-              const isDone    = _dlDone(d, tasks);
+              const dlStatus  = _dlStatus(d, tasks);
+              const isDone    = dlStatus === 'completed';
               const linked    = (d.task_ids||[]).map(id => tasks.find(t=>t.id===id)).filter(Boolean);
               const hasLinked = linked.length > 0;
-              const orphan    = hasLinked && linked.every(t => t.status !== 'done') && !isDone;
+              const taskListHtml = hasLinked ? linked.map(t => {
+                const abbr = _discAbbrev(t.discipline);
+                const dc   = t.discipline && typeof window.getDiscColor === 'function' ? window.getDiscColor(t.discipline) : '#8b5cf6';
+                return `<div class="msd-dl-task-row msd-dl-tc-${t.status}" data-task-id="${esc(t.id)}" data-dl-id="${esc(d.id)}" title="Click to open task">
+                  <span class="msd-dl-tr-dot" style="background:${SC[t.status]||'#6b7280'}"></span>
+                  ${abbr ? `<span class="msd-dl-tr-disc" style="color:${dc}">[${esc(abbr)}]</span>` : ''}
+                  <span class="msd-dl-tr-title">${esc(t.title)}</span>
+                  <span class="msd-dl-tr-status badge badge-status-${t.status}">${SL[t.status]||t.status}</span>
+                  <button class="msd-dl-tr-unlink icon-btn" data-task-id="${esc(t.id)}" data-dl-id="${esc(d.id)}" title="Unlink task from deliverable"><i class="fa fa-link-slash" style="font-size:9px"></i></button>
+                </div>`;
+              }).join('') : '';
               return `<div class="msd-dl-item${isDone?' msd-dl-done':''}${hasLinked?' msd-dl-linked':''}" data-dl-id="${esc(d.id)}" draggable="true">
                 <span class="msd-dl-drag-handle" title="Drag to another milestone"><i class="fa fa-grip-vertical"></i></span>
-                <span class="msd-dl-check-icon"><i class="fa ${isDone?'fa-circle-check':'fa-circle'}" style="color:${isDone?'#22c55e':'var(--text-muted)'}"></i></span>
-                <div class="msd-dl-body" style="cursor:pointer">
-                  <span class="msd-dl-text${isDone?' msd-dl-text-done':''}">${esc(d.text)}</span>
-                  ${hasLinked ? `<div class="msd-dl-tasks">${linked.map(t=>`<span class="msd-dl-task-chip msd-dl-tc-${t.status}" title="${esc(t.title)}">${esc(t.title)}</span>`).join('')}</div>` : '<span style="font-size:11px;color:var(--text-muted)">(no tasks linked)</span>'}
+                <button class="msd-dl-status-badge msd-dl-sb-${dlStatus}${hasLinked?' msd-dl-sb-auto':''}" data-dl-id="${esc(d.id)}" title="${hasLinked?'Status auto-derived from linked tasks':'Click to change status'}">${DL_SL[dlStatus]||dlStatus}</button>
+                <div class="msd-dl-body">
+                  <div class="msd-dl-title-row">
+                    <span class="msd-dl-text${isDone?' msd-dl-text-done':''}" title="Click to rename">${esc(d.text)}</span>
+                    ${hasLinked ? `<span class="msd-dl-task-toggle" title="Show/hide linked tasks"><i class="fa fa-chevron-right msd-dl-toggle-icon"></i> <span class="msd-dl-task-toggle-count">${linked.length} task${linked.length!==1?'s':''}</span></span>` : '<span class="msd-dl-no-tasks">(no tasks linked)</span>'}
+                  </div>
+                  ${hasLinked ? `<div class="msd-dl-task-list" style="display:none">${taskListHtml}</div>` : ''}
                 </div>
                 ${hasLinked ? `<button class="msd-dl-focus-btn icon-btn" data-dl-id="${esc(d.id)}" data-dl-text="${esc(d.text)}" title="Focus in timeline"><i class="fa fa-crosshairs" style="font-size:11px"></i></button>` : ''}
                 <button class="msd-dl-link-btn icon-btn" data-dl-id="${esc(d.id)}" title="Link tasks"><i class="fa fa-link" style="font-size:11px"></i></button>
+                <button class="msd-dl-create-task-btn" data-dl-id="${esc(d.id)}" data-dl-text="${esc(d.text)}" title="Create task from deliverable"><i class="fa fa-plus"></i> Task</button>
                 <button class="msd-dl-remove icon-btn" title="Remove"><i class="fa fa-xmark"></i></button>
               </div>`;
             }).join('') || '<p class="msd-dl-empty">No deliverables defined</p>'}
@@ -518,6 +543,7 @@
           <div class="msd-task-meta">
             <span class="badge badge-status-${t.status}">${SL[t.status]||t.status}</span>
             ${t.due_date?`<span class="${overdue?'msd-overdue':''}"><i class="fa fa-calendar-days"></i> ${_fmtDate(t.due_date)}</span>`:''}
+            ${t.workdays_needed && t.workdays_needed.value ? `<span class="task-workdays-chip"><i class="fa fa-clock"></i> ${t.workdays_needed.value}${t.workdays_needed.unit === 'weeks' ? 'w' : 'd'}</span>` : ''}
             ${deps.length?`<span class="msd-dep-info"><i class="fa fa-link"></i> needs: ${depNames}</span>`:''}
             ${(t.subtasks||[]).length?`<span><i class="fa fa-list-check"></i> ${(t.subtasks||[]).filter(s=>s.done).length}/${(t.subtasks||[]).length}</span>`:''}
           </div>
@@ -786,7 +812,167 @@
     if (ms && tasks) requestAnimationFrame(() => _drawDepArrows(el, ms.id, tasks));
   }
 
-  // ─── Event bindings ───────────────────────────────────────
+  // ─── Create task from deliverable modal ─────────────────
+  function _showCreateTaskFromDlModal(dl, ms, proj, projectId, panelEl) {
+    document.querySelectorAll('.msd-create-task-overlay').forEach(n => n.remove());
+
+    const DEFAULT_DISCS = ['GD', 'Art', 'Dev', 'QA', 'Production'];
+    const disciplines   = (proj.disciplines && proj.disciplines.length) ? proj.disciplines : DEFAULT_DISCS;
+    const discOptions   = disciplines.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
+
+    const overlay = document.createElement('div');
+    overlay.className = 'msd-dl-popup-overlay msd-create-task-overlay';
+    overlay.innerHTML = `
+      <div class="msd-dl-popup" role="dialog" aria-modal="true" style="max-width:480px">
+        <div class="msd-dl-popup-hdr">
+          <span style="font-weight:600;font-size:14px"><i class="fa fa-plus-circle"></i> Create Task from Deliverable</span>
+          <button class="msd-create-task-close icon-btn" title="Close"><i class="fa fa-xmark"></i></button>
+        </div>
+        <div class="msd-dl-popup-body" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label class="dp-field-label" style="display:block;margin-bottom:4px"><i class="fa fa-pen"></i> Task title</label>
+            <input class="msd-ct-title form-input" type="text" value="${esc(dl.text)}" placeholder="Task title…" style="width:100%" />
+          </div>
+          <div>
+            <label class="dp-field-label" style="display:block;margin-bottom:4px"><i class="fa fa-align-left"></i> Description</label>
+            <textarea class="msd-ct-desc form-input" rows="2" placeholder="Optional description…" style="width:100%;resize:vertical"></textarea>
+          </div>
+          <div style="display:flex;gap:10px">
+            <div style="flex:1">
+              <label class="dp-field-label" style="display:block;margin-bottom:4px"><i class="fa fa-flag"></i> Priority</label>
+              <select class="msd-ct-priority select-sm" style="width:100%">
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium" selected>Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div style="flex:1">
+              <label class="dp-field-label" style="display:block;margin-bottom:4px"><i class="fa fa-users"></i> Discipline</label>
+              <select class="msd-ct-discipline select-sm" style="width:100%">
+                <option value="">Unassigned</option>
+                ${discOptions}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="dp-field-label" style="display:block;margin-bottom:4px"><i class="fa fa-user"></i> Assignee</label>
+            <select class="msd-ct-assignee select-sm" style="width:100%">
+              <option value="">Unassigned</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-end">
+            <div style="flex:1">
+              <label class="dp-field-label" style="display:block;margin-bottom:4px"><i class="fa fa-clock"></i> Workdays needed</label>
+              <input class="msd-ct-workdays form-input" type="number" min="0" step="0.5" placeholder="e.g. 2.5" style="width:100%" />
+            </div>
+            <div style="flex:1">
+              <label class="dp-field-label" style="display:block;margin-bottom:4px">&nbsp;</label>
+              <select class="msd-ct-workdays-unit select-sm" style="width:100%">
+                <option value="days">days</option>
+                <option value="weeks">weeks</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+            <button class="msd-create-task-cancel btn btn-ghost btn-sm">Cancel</button>
+            <button class="msd-create-task-submit btn btn-primary btn-sm"><i class="fa fa-plus"></i> Create &amp; Link</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const titleInput  = overlay.querySelector('.msd-ct-title');
+    const descInput   = overlay.querySelector('.msd-ct-desc');
+    const prioSel     = overlay.querySelector('.msd-ct-priority');
+    const discSel     = overlay.querySelector('.msd-ct-discipline');
+    const assigneeSel = overlay.querySelector('.msd-ct-assignee');
+    const wdInput     = overlay.querySelector('.msd-ct-workdays');
+    const wdUnit      = overlay.querySelector('.msd-ct-workdays-unit');
+
+    // Populate assignee select
+    const _buildAssigneeOpts = (users) => {
+      assigneeSel.innerHTML = '<option value="">Unassigned</option>' +
+        users.map(u => `<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('');
+    };
+    const curUser = window.appData?.currentUser;
+    if (curUser) _buildAssigneeOpts([curUser]);
+    fetch('/api/users')
+      .then(r => r.json())
+      .then(data => {
+        const users = Array.isArray(data) ? data : (data.users || []);
+        if (document.body.contains(assigneeSel)) _buildAssigneeOpts(users);
+      })
+      .catch(() => {});
+
+    setTimeout(() => { titleInput.focus(); titleInput.select(); }, 50);
+
+    function _doCreate() {
+      const title = titleInput.value.trim();
+      if (!title) { titleInput.focus(); return; }
+      const wdVal = parseFloat(wdInput.value);
+      const workdays_needed = (!isNaN(wdVal) && wdVal > 0)
+        ? { value: wdVal, unit: wdUnit.value || 'days' }
+        : null;
+
+      const fp  = window.getProject(proj.id);
+      const fm  = (fp?.milestones||[]).find(m => m.id === ms.id) || ms;
+      const id  = window.uid('task');
+      const now = window.isoNow();
+      const task = {
+        id, title,
+        description:  descInput.value.trim(),
+        status:       'todo',
+        priority:     prioSel.value    || 'medium',
+        discipline:   discSel.value    || null,
+        assignee:     assigneeSel.value || null,
+        due_date:     null,
+        milestone_id: ms.id,
+        tags: [], subtasks: [], comments: [],
+        workdays_needed,
+        created_at: now, updated_at: now,
+        deleted: false
+      };
+      if (typeof window.pushUndo === 'function') window.pushUndo(proj.id);
+      fp.tasks = fp.tasks || [];
+      fp.tasks.push(task);
+
+      // Link task to deliverable
+      const dlObj = (fm.deliverables||[]).find(d => d.id === dl.id);
+      if (dlObj) {
+        dlObj.task_ids = dlObj.task_ids || [];
+        dlObj.task_ids.push(id);
+      }
+      fp.updated_at = now;
+      window.saveData();
+
+      overlay.remove();
+      if (typeof window.renderTasks === 'function') window.renderTasks(proj.id);
+      if (typeof window.renderDashboard === 'function') window.renderDashboard();
+      if (panelEl) {
+        const updProj = window.getProject(proj.id);
+        const updMs   = (updProj?.milestones||[]).find(m => m.id === ms.id) || ms;
+        _render(panelEl, updProj, updMs, projectId);
+        // Re-open the deliverable's task list after re-render
+        const dlItem = panelEl.querySelector(`.msd-dl-item[data-dl-id="${dl.id}"]`);
+        if (dlItem) {
+          const taskList = dlItem.querySelector('.msd-dl-task-list');
+          const icon     = dlItem.querySelector('.msd-dl-toggle-icon');
+          if (taskList) taskList.style.display = '';
+          if (icon)     icon.classList.add('msd-dl-icon-open');
+        }
+      }
+    }
+
+    overlay.querySelector('.msd-create-task-submit').addEventListener('click', e => { e.stopPropagation(); _doCreate(); });
+    overlay.querySelector('.msd-create-task-cancel').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('.msd-create-task-close').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    titleInput.addEventListener('keydown', e => {
+      if (e.key === 'Escape') overlay.remove();
+    });
+  }
+
   function _bindEvents(el, proj, ms, projectId) {
     // Mode toggle (Full range / From today)
     el.querySelectorAll('.msd-mode-btn').forEach(btn => {
@@ -874,7 +1060,7 @@
       const fp = window.getProject(proj.id);
       const fm = (fp?.milestones||[]).find(m => m.id === ms.id) || ms;
       fm.deliverables = fm.deliverables || [];
-      fm.deliverables.push({ id: window.uid('dl'), text, done: false, task_ids: taskIds });
+      fm.deliverables.push({ id: window.uid('dl'), text, done: false, status: 'todo', task_ids: taskIds });
       fm.updated_at = window.isoNow();
       window.saveData();
       _render(el, window.getProject(proj.id), (window.getProject(proj.id)?.milestones||[]).find(m=>m.id===ms.id)||fm, projectId);
@@ -885,18 +1071,102 @@
       if (e.key === 'Escape') { e.stopPropagation(); if (dlAddRow) dlAddRow.style.display='none'; }
     });
 
-    // Deliverables — click body to open popup
+    // Deliverables — inline rename helper
+    function _bindDlRename(span) {
+      span.addEventListener('click', e => {
+        e.stopPropagation();
+        if (span.dataset.editing) return;
+        span.dataset.editing = '1';
+        const original = span.textContent;
+        const input = document.createElement('input');
+        input.className = 'msd-dl-rename-input';
+        input.value = original;
+        span.replaceWith(input);
+        input.focus();
+        input.select();
+
+        const _commit = () => {
+          const newText = input.value.trim() || original;
+          const item    = input.closest('.msd-dl-item');
+          const dlId    = item?.dataset.dlId;
+          if (dlId && newText !== original) {
+            const fp = window.getProject(proj.id);
+            const fm = (fp?.milestones||[]).find(m => m.id === ms.id) || ms;
+            const dl = (fm.deliverables||[]).find(d => d.id === dlId);
+            if (dl) { dl.text = newText; fm.updated_at = window.isoNow(); window.saveData(); }
+          }
+          span.textContent = newText;
+          delete span.dataset.editing;
+          input.replaceWith(span);
+          _bindDlRename(span);
+        };
+        input.addEventListener('blur', _commit);
+        input.addEventListener('keydown', e2 => {
+          if (e2.key === 'Enter') { e2.preventDefault(); _commit(); }
+          if (e2.key === 'Escape') { input.value = original; _commit(); }
+        });
+      });
+    }
+    el.querySelectorAll('.msd-dl-text').forEach(span => _bindDlRename(span));
+
+    // Deliverables — click on body (not text/buttons) toggles task list
     el.querySelectorAll('.msd-dl-body').forEach(body => {
       body.addEventListener('click', e => {
         e.stopPropagation();
-        const item  = body.closest('.msd-dl-item');
-        const dlId  = item?.dataset.dlId;
-        if (!dlId) return;
-        const fp = window.getProject(proj.id);
-        const fm = (fp?.milestones||[]).find(m => m.id === ms.id) || ms;
-        const dl = (fm.deliverables||[]).find(d => d.id === dlId);
+        if (e.target.closest('.msd-dl-text, .msd-dl-rename-input, .msd-dl-task-list, .msd-dl-task-row, .msd-dl-task-toggle')) return;
+        const taskList = body.querySelector('.msd-dl-task-list');
+        if (!taskList) return;
+        const icon   = body.querySelector('.msd-dl-toggle-icon');
+        const isOpen = taskList.style.display !== 'none';
+        taskList.style.display = isOpen ? 'none' : '';
+        if (icon) icon.classList.toggle('msd-dl-icon-open', !isOpen);
+      });
+    });
+
+    // Deliverables — status badge click → toggle task list (for auto badges) OR cycle status
+    el.querySelectorAll('.msd-dl-status-badge').forEach(badge => {
+      badge.addEventListener('click', e => {
+        e.stopPropagation();
+        const dlId = badge.dataset.dlId;
+        const item = badge.closest('.msd-dl-item');
+        // If auto (linked tasks) — toggle the task list
+        if (badge.classList.contains('msd-dl-sb-auto')) {
+          const body     = item?.querySelector('.msd-dl-body');
+          const taskList = body?.querySelector('.msd-dl-task-list');
+          if (!taskList) return;
+          const icon   = body.querySelector('.msd-dl-toggle-icon');
+          const isOpen = taskList.style.display !== 'none';
+          taskList.style.display = isOpen ? 'none' : '';
+          if (icon) icon.classList.toggle('msd-dl-icon-open', !isOpen);
+          return;
+        }
+        // Manual cycle for unlinked
+        const fp   = window.getProject(proj.id);
+        const fm   = (fp?.milestones||[]).find(m => m.id === ms.id) || ms;
+        const dl   = (fm.deliverables||[]).find(d => d.id === dlId);
         if (!dl) return;
-        _openDlPopup(dl, fm, fp, projectId);
+        const CYCLE   = { 'todo': 'in-progress', 'in-progress': 'completed', 'completed': 'todo' };
+        const current = dl.status || (dl.done ? 'completed' : 'todo');
+        dl.status = CYCLE[current] || 'todo';
+        dl.done   = dl.status === 'completed';
+        fm.updated_at = window.isoNow();
+        window.saveData();
+        const upFp = window.getProject(proj.id);
+        _render(el, upFp, (upFp?.milestones||[]).find(m => m.id === ms.id) || fm, projectId);
+      });
+    });
+
+    // Deliverables — task-toggle chevron click
+    el.querySelectorAll('.msd-dl-task-toggle').forEach(tog => {
+      tog.addEventListener('click', e => {
+        e.stopPropagation();
+        const body     = tog.closest('.msd-dl-body');
+        const taskList = body?.querySelector('.msd-dl-task-list');
+        if (!taskList) return;
+        const icon   = tog.querySelector('.msd-dl-toggle-icon');
+        const isOpen = taskList.style.display !== 'none';
+        taskList.style.display = isOpen ? 'none' : '';
+        if (icon) icon.classList.toggle('msd-dl-icon-open', !isOpen);
       });
     });
 
@@ -1017,6 +1287,62 @@
       e.stopPropagation();
       el.dataset.msdDlFocus = '';
       _applyDlFocus(el, ms);
+    });
+
+    // Deliverables — task row: click opens detail panel
+    el.querySelectorAll('.msd-dl-task-row').forEach(row => {
+      row.addEventListener('click', e => {
+        if (e.target.closest('.msd-dl-tr-unlink')) return; // let unlink handle it
+        e.stopPropagation();
+        const taskId = row.dataset.taskId;
+        if (taskId && typeof window.openDetailPanel === 'function')
+          window.openDetailPanel(projectId, taskId);
+      });
+    });
+
+    // Deliverables — unlink task from deliverable
+    el.querySelectorAll('.msd-dl-tr-unlink').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const taskId = btn.dataset.taskId;
+        const dlId   = btn.dataset.dlId;
+        const fp     = window.getProject(proj.id);
+        const fm     = (fp?.milestones||[]).find(m => m.id === ms.id) || ms;
+        const dl     = (fm.deliverables||[]).find(d => d.id === dlId);
+        if (!dl) return;
+        dl.task_ids = (dl.task_ids||[]).filter(id => id !== taskId);
+        fm.updated_at = window.isoNow();
+        window.saveData();
+        const upFp = window.getProject(proj.id);
+        _render(el, upFp, (upFp?.milestones||[]).find(m => m.id === ms.id) || fm, projectId);
+        // Re-open the task list after re-render if it was open
+        requestAnimationFrame(() => {
+          const dlItem = el.querySelector(`.msd-dl-item[data-dl-id="${dlId}"]`);
+          if (dlItem) {
+            const taskList = dlItem.querySelector('.msd-dl-task-list');
+            const icon     = dlItem.querySelector('.msd-dl-toggle-icon');
+            if (taskList) { taskList.style.display = ''; if (icon) icon.classList.add('msd-dl-icon-open'); }
+          }
+        });
+      });
+    });
+
+    // Deliverables — status badge click (manual cycle for unlinked deliverables)
+    // NOTE: now handled in the unified badge handler above — skip the old block
+    el.querySelectorAll('.msd-dl-status-badge:not(.msd-dl-sb-auto)').forEach(() => { /* handled above */ });
+
+    // Deliverables — create task from deliverable
+    el.querySelectorAll('.msd-dl-create-task-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const dlId   = btn.dataset.dlId;
+        const dlText = btn.dataset.dlText || '';
+        const fp     = window.getProject(proj.id);
+        const fm     = (fp?.milestones||[]).find(m => m.id === ms.id) || ms;
+        const dl     = (fm.deliverables||[]).find(d => d.id === dlId);
+        if (!dl) return;
+        _showCreateTaskFromDlModal(dl, fm, fp, projectId, el);
+      });
     });
 
     // Deliverables — remove

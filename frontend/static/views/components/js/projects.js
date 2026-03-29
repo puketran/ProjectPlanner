@@ -275,9 +275,8 @@
     if (bc) bc.innerHTML = `<span>/</span><span>${esc(proj.name)}</span>`;
 
     window.switchView('project-detail');
-    _switchProjectTab('tasks');
+    _switchProjectTab('team-board');
     if (typeof window.resetDisciplineFilter === 'function') window.resetDisciplineFilter();
-    if (typeof window.renderTasks === 'function') window.renderTasks(projectId);
     if (typeof window.refreshUndoButtons === 'function') window.refreshUndoButtons();
   };
 

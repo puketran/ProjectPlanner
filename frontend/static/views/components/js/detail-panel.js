@@ -70,6 +70,20 @@
     const dueEl = document.getElementById('dp-due-date');
     if (dueEl) dueEl.value = task.due_date || '';
 
+    // Workdays needed
+    const wdEl   = document.getElementById('dp-workdays');
+    const wdUnit = document.getElementById('dp-workdays-unit');
+    if (wdEl && wdUnit) {
+      const wd = task.workdays_needed;
+      if (wd != null && wd.unit === 'weeks') {
+        wdUnit.value = 'weeks';
+        wdEl.value   = wd.value != null ? wd.value : '';
+      } else {
+        wdUnit.value = 'days';
+        wdEl.value   = (wd != null && wd.value != null) ? wd.value : '';
+      }
+    }
+
     // Assignee — populate with all known users
     const assigneeEl = document.getElementById('dp-assignee');
     if (assigneeEl) {
@@ -212,7 +226,7 @@
 
   // ─── Auto-save on field change ────────────────────────────
   function _bindAutoSave(projectId, taskId) {
-    const fields = ['dp-task-title','dp-task-description','dp-status','dp-priority','dp-due-date','dp-assignee','dp-milestone','dp-discipline'];
+    const fields = ['dp-task-title','dp-task-description','dp-status','dp-priority','dp-due-date','dp-workdays','dp-workdays-unit','dp-assignee','dp-milestone','dp-discipline'];
     fields.forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -237,6 +251,9 @@
     task.status      = get('dp-status')           || task.status;
     task.priority    = get('dp-priority')         || task.priority;
     task.due_date    = get('dp-due-date')         || null;
+    const wdVal  = parseFloat(get('dp-workdays'));
+    const wdUnit = get('dp-workdays-unit') || 'days';
+    task.workdays_needed = (!isNaN(wdVal) && wdVal > 0) ? { value: wdVal, unit: wdUnit } : null;
     const assignee   = get('dp-assignee');
     task.assignee    = assignee || null;
     const msVal      = get('dp-milestone');

@@ -14,6 +14,20 @@
   let _dragProjId    = null;
   let _disciplineFilter = null;
 
+  // ─── Per-user pin helpers ─────────────────────────────────
+  function _isPinned(taskId) {
+    const u = window.appData && window.appData.currentUser;
+    return !!(u && u.pinnedTasks && u.pinnedTasks[taskId]);
+  }
+  function _setPin(taskId, value) {
+    const u = window.appData && window.appData.currentUser;
+    if (!u) return;
+    u.pinnedTasks = u.pinnedTasks || {};
+    if (value) u.pinnedTasks[taskId] = true;
+    else delete u.pinnedTasks[taskId];
+    window.saveData();
+  }
+
   // Tracks which task rows have their inline subtask panel open
   const _openSubtaskPanels = new Set();
 
@@ -95,6 +109,7 @@
               <span class="badge badge-status-${t.status}">${STATUS_LABELS[t.status] || t.status}</span>
               <i class="fa ${pIcon} task-priority-icon" title="${t.priority}"></i>
               ${t.due_date ? `<span class="task-due ${_isOverdue(t) ? 'overdue' : ''}"><i class="fa fa-calendar-days"></i> ${_fmtDate(t.due_date)}</span>` : ''}
+              ${t.workdays_needed && t.workdays_needed.value ? `<span class="task-workdays-chip" title="Workdays needed"><i class="fa fa-clock"></i> ${t.workdays_needed.value}${t.workdays_needed.unit === 'weeks' ? 'w' : 'd'}</span>` : ''}
               <span class="task-subtask-progress ${subtasks.length ? '' : 'subtask-progress-empty'}" data-task-id="${t.id}">
                 <i class="fa fa-list-check"></i> ${subDone}/${subtasks.length}
               </span>
@@ -104,7 +119,7 @@
               ${_getDependentChips(t, projectId)}
             </div>
           </div>
-          <button class="task-pin-btn ${t.pinned ? 'pinned' : ''}" data-action="toggle-pin" data-task-id="${t.id}" title="${t.pinned ? 'Unpin task' : 'Pin task'}">
+          <button class="task-pin-btn ${_isPinned(t.id) ? 'pinned' : ''}" data-action="toggle-pin" data-task-id="${t.id}" title="${_isPinned(t.id) ? 'Unpin task' : 'Pin task'}">
             <i class="fa fa-thumbtack"></i>
           </button>
         </div>
@@ -380,18 +395,13 @@
       });
     });
 
-    // ── Toggle task pin ───────────────────────────────────
+    // ── Toggle task pin (per-user) ─────────────────────────
     container.querySelectorAll('[data-action="toggle-pin"]').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
-        const t = _getTask(projectId, btn.dataset.taskId);
-        if (!t) return;
-        t.pinned = !t.pinned;
-        t.updated_at = window.isoNow();
-        _touch(projectId);
+        const tid = btn.dataset.taskId;
+        _setPin(tid, !_isPinned(tid));
         window.renderTasks(projectId);
-        if (typeof window.renderProjects  === 'function') window.renderProjects();
-        if (typeof window.renderDashboard === 'function') window.renderDashboard();
       });
     });
 
@@ -484,7 +494,10 @@
   function _renderKanban(projectId) {
     const board = document.getElementById('kanban-board');
     if (!board) return;
-    const tasks = window.getActiveTasks(projectId);
+    _renderDisciplinePills(projectId);
+    let tasks = window.getActiveTasks(projectId);
+    if (_disciplineFilter) tasks = tasks.filter(t => t.discipline === _disciplineFilter);
+    if (!_showCompleted)   tasks = tasks.filter(t => t.status !== 'done');
     ['todo','in-progress','blocked','done'].forEach(status => {
       const cards = board.querySelector(`.kanban-cards[data-status="${status}"]`);
       const count = board.querySelector(`.kanban-col[data-status="${status}"] .kanban-col-count`);
@@ -686,6 +699,8 @@
     if (prio   !== 'all')    tasks = tasks.filter(t => t.priority === prio);
     if (!_showCompleted)     tasks = tasks.filter(t => t.status !== 'done');
     if (_disciplineFilter)   tasks = tasks.filter(t => t.discipline === _disciplineFilter);
+    // Pinned tasks float to top (per-user)
+    tasks.sort((a, b) => (_isPinned(b.id) ? 1 : 0) - (_isPinned(a.id) ? 1 : 0));
     return tasks;
   }
 
