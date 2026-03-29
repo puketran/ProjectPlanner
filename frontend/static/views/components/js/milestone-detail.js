@@ -80,7 +80,7 @@
     const msEnd   = ms.end_date   ? new Date(ms.end_date   + 'T00:00:00') : null;
     const totalMs = (msStart && msEnd && msEnd > msStart) ? msEnd - msStart : null;
 
-    // View mode: 'full' (ms range) or 'crop' (today → end). Preserved across re-renders.
+    // View mode: 'full' (ms range), 'crop' (today → end), 'day' (each day visible). Preserved across re-renders.
     const mode    = el.dataset.msdMode || 'full';
     const today   = new Date(); today.setHours(0, 0, 0, 0);
     let viewStart = msStart;
@@ -90,27 +90,26 @@
       const vt = msEnd - vs;
       if (vt > 0) { viewStart = vs; viewTotal = vt; }
     }
+    // Day mode: same range as full, but zoom will be auto-set to make each day visible
+    // (handled after render in _bindZoom / initZoom below)
     // Add 12% trailing buffer so bars near the right edge show their labels
     if (viewTotal) viewTotal = viewTotal * 1.12;
 
     const sortedTasks = _topoSort(tasks);
     const taskIds     = new Set(tasks.map(t => t.id));
 
-    // Bottleneck detection – visible only when viewing tasks
-    const overlaps   = viewTotal ? _detectBottlenecks(tasks, viewStart, viewTotal) : [];
-    const overlapIds = new Set(overlaps.flatMap(o => [o.taskIdA, o.taskIdB]));
-
     // Deliverables & task highlight filter
     const deliverables = ms.deliverables || [];
     const _isLate = t => t.due_date && t.status !== 'done' && new Date(t.due_date + 'T00:00:00') < today;
-    const highlightIds = new Set(sortedTasks.filter(t => t.status === 'blocked' || overlapIds.has(t.id) || _isLate(t)).map(t => t.id));
+    const highlightIds = new Set(sortedTasks.filter(t => t.status === 'blocked' || _isLate(t)).map(t => t.id));
     const taskFilter   = el.dataset.msdTaskFilter || (highlightIds.size > 0 ? 'highlights' : 'all');
     const displayTasks = (taskFilter === 'highlights' && highlightIds.size > 0) ? sortedTasks.filter(t => highlightIds.has(t.id)) : sortedTasks;
 
-    // Bottleneck stripes (rendered behind bars)
-    const bnHtml = overlaps.map(o =>
-      `<div class="msd-bn-stripe" style="left:${Math.max(0,o.left).toFixed(2)}%;width:${(o.right-o.left).toFixed(2)}%" title="Bottleneck: overlapping tasks"></div>`
-    ).join('');
+    // Gantt shows only tasks linked to at least one deliverable
+    const allLinkedIds = new Set(deliverables.flatMap(d => d.task_ids || []));
+    const ganttTasks   = sortedTasks.filter(t => allLinkedIds.has(t.id));
+    el._msdGanttTasks  = ganttTasks;  // used by _applyDlFocus and _applyZoom
+    el._msdFocusIds    = null;        // cleared on each full render
 
     el.innerHTML = `
       <div class="msd-inline-panel" style="--msd-color:${color}">
@@ -120,7 +119,6 @@
             <span class="msd-stat-pill msd-sp-todo">${tasks.filter(t=>t.status==='todo').length} Todo</span>
             <span class="msd-stat-pill msd-sp-ip">${tasks.filter(t=>t.status==='in-progress').length} In&nbsp;Progress</span>
             ${blocked ? `<span class="msd-stat-pill msd-sp-blocked"><i class="fa fa-triangle-exclamation"></i> ${blocked} Blocked</span>` : ''}
-            ${overlaps.length ? `<span class="msd-stat-pill msd-sp-bottle"><i class="fa fa-code-branch"></i> ${overlaps.length} Bottleneck${overlaps.length>1?'s':''}</span>` : ''}
             <span class="msd-stat-pill msd-sp-done">${done} Done</span>
             <span class="msd-stat-sep"></span>
             <span class="msd-stat-pct" style="color:${color}">${pct}%</span>
@@ -146,17 +144,18 @@
             <div class="msd-mode-toggle">
               <button class="msd-mode-btn${mode==='full'?' msd-mode-active':''}" data-mode="full">Full range</button>
               <button class="msd-mode-btn${mode==='crop'?' msd-mode-active':''}" data-mode="crop">From today</button>
+              <button class="msd-mode-btn${mode==='day'?' msd-mode-active':''}" data-mode="day"><i class="fa fa-calendar-day"></i> Day</button>
             </div>
           </div>
           <div class="msd-gantt-inner">
             <div class="msd-gantt-labels">
               <div class="msd-gl-hdr">Task</div>
-              ${sortedTasks.map(t => {
+              <div class="msd-gl-week-spacer" style="display:none;height:20px;border-bottom:1px solid var(--border-color);flex-shrink:0;"></div>
+              <div class="msd-gl-day-spacer"  style="display:none;height:20px;border-bottom:1px solid var(--border-color);flex-shrink:0;"></div>
+              ${ganttTasks.map(t => {
                 const abbr  = _discAbbrev(t.discipline);
                 const dc    = t.discipline && typeof window.getDiscColor === 'function' ? window.getDiscColor(t.discipline) : '';
-                const isOL  = overlapIds.has(t.id);
-                return `<div class="msd-gl-row${t.status==='blocked'?' msd-gl-blocked':''}${isOL?' msd-gl-overlap':''}" data-task-id="${t.id}" title="${esc(t.title)}">
-                  ${isOL ? `<i class="fa fa-exclamation msd-gl-bn-icon" title="Potential bottleneck"></i>` : ''}
+                return `<div class="msd-gl-row${t.status==='blocked'?' msd-gl-blocked':''}" data-task-id="${t.id}" title="${esc(t.title)}">
                   ${abbr ? `<span class="msd-disc-tag" style="color:${dc}">[${esc(abbr)}]</span>` : ''}
                   <span class="msd-gl-title">${esc(t.title)}</span>
                 </div>`;
@@ -168,12 +167,11 @@
                 <div class="msd-week-hdr-slot"></div>
                 <div class="msd-day-hdr-slot"></div>
                 <div class="msd-bars-layer" id="msd-bars-${ms.id}">
-                  ${bnHtml}
                   ${_todayLineHtml(viewStart, viewTotal, today)}
-                  ${sortedTasks.map(t =>
+                  ${ganttTasks.map(t =>
                     `<div class="msd-bar-row" data-task-id="${t.id}">
-                      ${_ghostBarsHtml(t, tasks, taskIds, ms, viewStart, viewTotal)}
-                      ${_barHtml(t, ms, viewStart, viewTotal, overlapIds.has(t.id))}
+                      ${_ghostBarsHtml(t, ganttTasks, allLinkedIds, ms, viewStart, viewTotal)}
+                      ${_barHtml(t, ms, viewStart, viewTotal)}
                     </div>`
                   ).join('')}
                   <svg class="msd-dep-svg" id="msd-dep-svg-${ms.id}"></svg>
@@ -195,15 +193,36 @@
               const isDone    = dlStatus === 'completed';
               const linked    = (d.task_ids||[]).map(id => tasks.find(t=>t.id===id)).filter(Boolean);
               const hasLinked = linked.length > 0;
+              const today0 = new Date(); today0.setHours(0,0,0,0);
+              const allProjTasks = proj.tasks || [];
               const taskListHtml = hasLinked ? linked.map(t => {
-                const abbr = _discAbbrev(t.discipline);
-                const dc   = t.discipline && typeof window.getDiscColor === 'function' ? window.getDiscColor(t.discipline) : '#8b5cf6';
-                return `<div class="msd-dl-task-row msd-dl-tc-${t.status}" data-task-id="${esc(t.id)}" data-dl-id="${esc(d.id)}" title="Click to open task">
+                const abbr    = _discAbbrev(t.discipline);
+                const dc      = t.discipline && typeof window.getDiscColor === 'function' ? window.getDiscColor(t.discipline) : '#8b5cf6';
+                const dueDate = t.due_date ? new Date(t.due_date + 'T00:00:00') : null;
+                const daysLeft = dueDate ? Math.round((dueDate - today0) / 86400000) : null;
+                const overdue  = daysLeft !== null && daysLeft < 0 && t.status !== 'done';
+                const dueFmt   = t.due_date ? _fmtDate(t.due_date) : '';
+                const daysTag  = (daysLeft !== null && t.status !== 'done')
+                  ? (daysLeft < 0  ? `<span class="msd-dl-tr-days msd-dl-days-late">${Math.abs(daysLeft)}d late</span>`
+                   : daysLeft === 0 ? `<span class="msd-dl-tr-days msd-dl-days-today">today</span>`
+                   : `<span class="msd-dl-tr-days">in ${daysLeft}d</span>`) : '';
+                const prereqs  = (t.dependencies||[])
+                  .map(d2 => allProjTasks.find(tt => tt.id === d2.taskId && !tt.deleted))
+                  .filter(Boolean);
+                return `<div class="msd-dl-task-row msd-dl-tc-${t.status}" data-task-id="${esc(t.id)}" data-dl-id="${esc(d.id)}" draggable="true">
+                  <span class="msd-dl-tr-drag" title="Drag to reorder"><i class="fa fa-grip-vertical"></i></span>
                   <span class="msd-dl-tr-dot" style="background:${SC[t.status]||'#6b7280'}"></span>
                   ${abbr ? `<span class="msd-dl-tr-disc" style="color:${dc}">[${esc(abbr)}]</span>` : ''}
-                  <span class="msd-dl-tr-title">${esc(t.title)}</span>
-                  <span class="msd-dl-tr-status badge badge-status-${t.status}">${SL[t.status]||t.status}</span>
-                  <button class="msd-dl-tr-unlink icon-btn" data-task-id="${esc(t.id)}" data-dl-id="${esc(d.id)}" title="Unlink task from deliverable"><i class="fa fa-link-slash" style="font-size:9px"></i></button>
+                  <div class="msd-dl-tr-main">
+                    <div class="msd-dl-tr-header">
+                      <span class="msd-dl-tr-title">${esc(t.title)}</span>
+                      <span class="msd-dl-tr-status badge badge-status-${t.status}">${SL[t.status]||t.status}</span>
+                      ${t.due_date ? `<span class="msd-dl-tr-date${overdue?' msd-dl-tr-date-late':''}"><i class="fa fa-calendar-days"></i> ${dueFmt}</span>${daysTag}` : ''}
+                      ${t.workdays_needed?.value ? `<span class="msd-dl-tr-wd"><i class="fa fa-clock"></i> ${t.workdays_needed.value}${t.workdays_needed.unit==='weeks'?'w':'d'}</span>` : ''}
+                    </div>
+                    ${prereqs.length ? `<div class="msd-dl-tr-prereqs"><i class="fa fa-arrow-right-long"></i> needs: ${prereqs.map(p => `<span class="msd-dl-tr-prereq msd-dl-tc-${p.status}"><span style="color:${SC[p.status]||'#6b7280'};font-size:7px">●</span> ${esc(p.title.length>24?p.title.slice(0,24)+'…':p.title)}</span>`).join('')}</div>` : ''}
+                  </div>
+                  <button class="msd-dl-tr-unlink icon-btn" data-task-id="${esc(t.id)}" data-dl-id="${esc(d.id)}" title="Unlink"><i class="fa fa-link-slash" style="font-size:9px"></i></button>
                 </div>`;
               }).join('') : '';
               return `<div class="msd-dl-item${isDone?' msd-dl-done':''}${hasLinked?' msd-dl-linked':''}" data-dl-id="${esc(d.id)}" draggable="true">
@@ -260,9 +279,8 @@
       </div>`;
 
     _bindEvents(el, proj, ms, projectId);
-    if (viewTotal) requestAnimationFrame(() => _drawDepArrows(el, ms.id, tasks));
-    if (viewTotal) _bindZoom(el, ms, tasks);
-    if (viewTotal) requestAnimationFrame(() => _applyDlFocus(el, ms));
+    if (viewTotal) _bindZoom(el, ms, ganttTasks, mode);
+    if (viewTotal) requestAnimationFrame(() => _applyDlFocus(el, ms, tasks));
   }
 
   // ─── Topological sort (prerequisites first) ──────────────
@@ -367,10 +385,10 @@
     const start = t.start_date ? new Date(t.start_date + 'T00:00:00') : null;
     const due   = t.due_date   ? new Date(t.due_date   + 'T00:00:00') : null;
     if (start && due && due >= start) {
-      return { left: (start.getTime()-vst)/viewTotal*100, right: (due.getTime()-vst)/viewTotal*100 };
+      return { left: (start.getTime()-vst)/viewTotal*100, right: (due.getTime()+86400000-vst)/viewTotal*100 };
     } else if (due) {
-      const x = (due.getTime()-vst)/viewTotal*100;
-      return { left: x-1.5, right: x+3.5 };
+      const x = (due.getTime()+86400000-vst)/viewTotal*100;
+      return { left: x-3, right: x };
     } else if (start) {
       const x = (start.getTime()-vst)/viewTotal*100;
       return { left: x, right: x+5 };
@@ -422,7 +440,7 @@
   }
 
   // ─── Task bar ─────────────────────────────────────────────
-  function _barHtml(t, ms, viewStart, viewTotal, isBottleneck) {
+  function _barHtml(t, ms, viewStart, viewTotal) {
     const vst       = viewStart.getTime();
     const vendt     = vst + viewTotal;
     const start     = t.start_date ? new Date(t.start_date + 'T00:00:00') : null;
@@ -431,11 +449,21 @@
     const discColor = t.discipline && typeof window.getDiscColor === 'function'
       ? window.getDiscColor(t.discipline) : msColor;
 
+    // Derive effective start from workdays if no explicit start_date
+    let effectiveStart = start;
+    if (!effectiveStart && due && t.workdays_needed && t.workdays_needed.value > 0) {
+      const wdays = t.workdays_needed.unit === 'weeks' ? t.workdays_needed.value * 7 : t.workdays_needed.value;
+      effectiveStart = new Date(due.getTime() - Math.max(0, wdays - 1) * 86400000);
+    }
+
+    // End-of-day: bar right edge = end of due date
+    const dueEnd   = due ? new Date(due.getTime() + 86400000) : null;
+
     let leftPct = 2, widthPct = 5;
-    if (start && due && due >= start) {
+    if (effectiveStart && due && due >= effectiveStart) {
       // Raw positions in view-percentage
-      const rawLeft  = (start.getTime() - vst) / viewTotal * 100;
-      const rawRight = (due.getTime()   - vst) / viewTotal * 100;
+      const rawLeft  = (effectiveStart.getTime() - vst) / viewTotal * 100;
+      const rawRight = (dueEnd.getTime()          - vst) / viewTotal * 100;
       // Skip if entirely outside view
       if (rawRight < 0 || rawLeft > 100) {
         return `<div class="msd-bar-outside" title="${esc(t.title)} (outside view range)"></div>`;
@@ -443,11 +471,11 @@
       leftPct  = Math.max(0, rawLeft);
       widthPct = Math.max(2, Math.min(rawRight, 100) - leftPct);
     } else if (due) {
-      const rawX = (due.getTime() - vst) / viewTotal * 100;
+      const rawX = (dueEnd.getTime() - vst) / viewTotal * 100;
       if (rawX < -2 || rawX > 102) {
         return `<div class="msd-bar-outside" title="${esc(t.title)} (outside view range)"></div>`;
       }
-      leftPct  = Math.max(0, rawX - 1.5);
+      leftPct  = Math.max(0, rawX - 3);
       widthPct = Math.min(5, 100 - leftPct);
     } else if (start) {
       const rawX = (start.getTime() - vst) / viewTotal * 100;
@@ -463,25 +491,31 @@
     const barColor  = isDone ? '#22c55e' : isBlocked ? '#ef4444' : discColor;
     const abbr      = _discAbbrev(t.discipline);
 
-    return `<div class="msd-task-bar${isBlocked?' msd-bar-blocked':''}${isDone?' msd-bar-done':''}${isBottleneck?' msd-bar-bottleneck':''}"
+    return `<div class="msd-task-bar${isBlocked?' msd-bar-blocked':''}${isDone?' msd-bar-done':''}"
         data-task-id="${t.id}"
+        data-due-ms="${due ? due.getTime() : ''}"
+        data-start-ms="${effectiveStart ? effectiveStart.getTime() : ''}"
         style="left:${leftPct.toFixed(2)}%;width:${widthPct.toFixed(2)}%;background:${barColor}${isDone?'99':'cc'};border-color:${barColor}"
         title="${esc(t.title)}: ${SL[t.status]||t.status}${t.due_date?' – due '+_fmtDate(t.due_date):''}">
+      <div class="msd-bar-resize-l" data-drag="resize-l"></div>
       <span class="msd-bar-lbl">${abbr?`[${abbr}] `:''}${esc(t.title)}</span>
+      <div class="msd-bar-resize-r" data-drag="resize-r"></div>
     </div>`;
   }
 
   // ─── SVG dependency arrows (drawn post-layout) ───────────
-  function _drawDepArrows(el, msId, tasks) {
+  function _drawDepArrows(el, msId, tasks, filterIds) {
     const svg   = el.querySelector(`#msd-dep-svg-${msId}`);
     const layer = el.querySelector(`#msd-bars-${msId}`);
     if (!svg || !layer) return;
 
-    const taskIds   = new Set(tasks.map(t => t.id));
+    // filterIds: when set, only draw arrows between tasks both inside the set
+    const taskIds   = filterIds || new Set(tasks.map(t => t.id));
     const layerRect = layer.getBoundingClientRect();
     const arrows    = [];
 
     tasks.forEach(t => {
+      if (filterIds && !filterIds.has(t.id)) return;
       (t.dependencies || []).forEach(dep => {
         if (!taskIds.has(dep.taskId)) return;
         const fromBar = layer.querySelector(`.msd-bar-row[data-task-id="${dep.taskId}"] .msd-task-bar`);
@@ -705,43 +739,146 @@
   }
 
   // ─── Deliverable focus: dim/highlight rows in Gantt ──────
-  function _applyDlFocus(el, ms) {
-    const dlId = el.dataset.msdDlFocus || '';
+  function _applyDlFocus(el, ms, tasks) {
+    const dlId         = el.dataset.msdDlFocus || '';
     const deliverables = ms.deliverables || [];
-    const dl  = dlId ? deliverables.find(d => d.id === dlId) : null;
-    const focusIds = new Set(dl ? (dl.task_ids || []) : []);
-    const active   = focusIds.size > 0;
+    const dl           = dlId ? deliverables.find(d => d.id === dlId) : null;
+    const active       = !!dl && (dl.task_ids || []).length > 0;
 
-    // Gantt rows
+    // Focused set: ONLY the tasks explicitly listed in dl.task_ids (no transitive deps)
+    const msTaskMap = new Map((tasks || []).map(t => [t.id, t]));
+    const focusIds  = new Set(active ? (dl.task_ids || []) : []);
+
+    // Store focus set on el for use by _applyZoom arrow redraws
+    el._msdFocusIds = active ? focusIds : null;
+
+    // Show/hide Gantt label rows (completely hide non-focused rows)
     el.querySelectorAll('.msd-gl-row').forEach(row => {
-      row.classList.toggle('msd-row-dimmed',  active && !focusIds.has(row.dataset.taskId));
-      row.classList.toggle('msd-row-focused', active &&  focusIds.has(row.dataset.taskId));
+      const inFocus = focusIds.has(row.dataset.taskId);
+      row.style.display = (active && !inFocus) ? 'none' : '';
+      row.classList.toggle('msd-row-focused', active && inFocus);
+      row.classList.remove('msd-row-dimmed');
     });
+    // Show/hide Gantt bar rows; hide ghost bars in focus mode
     el.querySelectorAll('.msd-bar-row').forEach(row => {
-      row.classList.toggle('msd-row-dimmed',  active && !focusIds.has(row.dataset.taskId));
-      row.classList.toggle('msd-row-focused', active &&  focusIds.has(row.dataset.taskId));
+      const inFocus = focusIds.has(row.dataset.taskId);
+      row.style.display = (active && !inFocus) ? 'none' : '';
+      row.classList.toggle('msd-row-focused', active && inFocus);
+      row.classList.remove('msd-row-dimmed');
+      row.querySelectorAll('.msd-ghost-bar').forEach(gb => { gb.style.display = active ? 'none' : ''; });
     });
 
     // Toolbar indicator
     const ind  = el.querySelector('.msd-dl-focus-indicator');
     const name = el.querySelector('.msd-dl-focus-name');
-    if (ind)  ind.style.display  = active ? '' : 'none';
-    if (name) name.textContent   = active ? `Showing: ${dl.text}` : '';
+    if (ind)  ind.style.display = active ? '' : 'none';
+    if (name) name.textContent  = active ? `Showing: ${dl.text}` : '';
 
-    // Deliverable focus button active state
+    // Focus button active state
     el.querySelectorAll('.msd-dl-focus-btn').forEach(btn => {
       btn.classList.toggle('msd-dl-focus-active', btn.dataset.dlId === dlId && active);
     });
+
+    // Zoom and scroll to fit focused tasks
+    const track = el.querySelector(`#msd-track-${ms.id}`);
+    const inner = track ? track.querySelector('.msd-gantt-track-inner') : null;
+    if (!track || !inner) return;
+
+    if (!active) {
+      // Restore pre-focus zoom then clear saved value
+      const pre = parseFloat(el.dataset.msdPreFocusZoom || '1');
+      el.dataset.msdPreFocusZoom = '';
+      el.dataset.msdZoom = pre;
+      _applyZoom(el, track, pre, ms, tasks);
+      // Clear dep arrows when exiting focus
+      const svgExit = el.querySelector(`#msd-dep-svg-${ms.id}`);
+      if (svgExit) svgExit.innerHTML = '';
+      return;
+    }
+
+    // Persist pre-focus zoom (only when first entering focus)
+    if (!el.dataset.msdPreFocusZoom) {
+      el.dataset.msdPreFocusZoom = el.dataset.msdZoom || '1';
+    }
+
+    // In day mode: let _bindZoom/day-mode logic handle the zoom level naturally
+    // Just compute zoom so each day = ~60 px for focus
+    const viewStartMs = parseFloat(inner.dataset.viewStart);
+    const viewTotalMs = parseFloat(inner.dataset.viewTotal);
+    if (!viewStartMs || !viewTotalMs) return;
+
+    // Compute date span of focused tasks using workday-aware range
+    let minMs = Infinity, maxMs = -Infinity;
+    focusIds.forEach(id => {
+      const t = msTaskMap.get(id);
+      if (!t) return;
+      const due = t.due_date ? new Date(t.due_date + 'T00:00:00').getTime() : null;
+      let startT = t.start_date ? new Date(t.start_date + 'T00:00:00').getTime() : null;
+      if (due && t.workdays_needed && t.workdays_needed.value > 0) {
+        const wdays = t.workdays_needed.unit === 'weeks' ? t.workdays_needed.value * 7 : t.workdays_needed.value;
+        startT = due - Math.max(0, wdays - 1) * 86400000;
+      }
+      if (startT !== null) minMs = Math.min(minMs, startT);
+      if (due   !== null) maxMs = Math.max(maxMs, due + 86400000); // end of due day
+      if (startT !== null && due === null) maxMs = Math.max(maxMs, startT + 86400000);
+      if (due   !== null && startT === null) minMs = Math.min(minMs, due);
+    });
+
+    if (isFinite(minMs) && isFinite(maxMs) && maxMs >= minMs) {
+      const padding       = 2 * 86400000; // 2-day padding
+      const clampedMin    = Math.max(minMs - padding, viewStartMs);
+      const clampedMax    = Math.min(maxMs + padding, viewStartMs + viewTotalMs);
+      const focusedDays   = Math.ceil((clampedMax - clampedMin) / 86400000);
+      const trackW        = track.clientWidth || 600;
+      const targetPxPerDay = 60;
+      const zoom = Math.min(16, Math.max(1.5, (focusedDays * targetPxPerDay) / trackW));
+      el.dataset.msdZoom = zoom;
+      _applyZoom(el, track, zoom, ms, tasks);
+      // Force day header regardless of zoom threshold
+      requestAnimationFrame(() => {
+        const innerW = inner.offsetWidth || trackW * zoom;
+        track.scrollLeft = Math.max(0, (clampedMin - viewStartMs) / viewTotalMs * innerW - trackW * 0.1);
+        const daySlot = inner.querySelector('.msd-day-hdr-slot');
+        if (daySlot) daySlot.innerHTML = _dayHeaderHtml(new Date(viewStartMs), viewTotalMs);
+        // Draw dep arrows filtered to focused tasks
+        _drawDepArrows(el, ms.id, el._msdGanttTasks || tasks, focusIds);
+      });
+    }
   }
 
   // ─── Gantt zoom ───────────────────────────────────────────
-  function _bindZoom(el, ms, tasks) {
+  function _bindZoom(el, ms, tasks, mode) {
     const track = el.querySelector(`#msd-track-${ms.id}`);
     if (!track) return;
 
-    // Restore zoom level across re-renders (stored on outer el)
-    const initZoom = parseFloat(el.dataset.msdZoom || '1');
-    _applyZoom(el, track, initZoom, ms, tasks);
+    // In day mode: compute zoom so each day is ~60 px wide
+    if (mode === 'day') {
+      const inner0    = track.querySelector('.msd-gantt-track-inner');
+      const vtMs      = inner0 ? parseFloat(inner0.dataset.viewTotal) : 0;
+      const totalDays = vtMs ? Math.ceil(vtMs / 86400000) : 0;
+      if (totalDays > 0) {
+        const trackW         = track.clientWidth || 600;
+        const targetPxPerDay = 60;
+        const zoom = Math.min(16, Math.max(1, (totalDays * targetPxPerDay) / trackW));
+        el.dataset.msdZoom = zoom;
+        _applyZoom(el, track, zoom, ms, tasks);
+        // Scroll to today if in range
+        requestAnimationFrame(() => {
+          const inner  = track.querySelector('.msd-gantt-track-inner');
+          if (!inner) return;
+          const vsMs   = parseFloat(inner.dataset.viewStart);
+          const vtMs2  = parseFloat(inner.dataset.viewTotal);
+          const todayMs = new Date().setHours(0,0,0,0);
+          const leftPct = (todayMs - vsMs) / vtMs2;
+          if (leftPct >= 0 && leftPct <= 1)
+            track.scrollLeft = leftPct * inner.offsetWidth - track.clientWidth * 0.2;
+        });
+      }
+    } else {
+      // Restore zoom level across re-renders (stored on outer el)
+      const initZoom = parseFloat(el.dataset.msdZoom || '1');
+      _applyZoom(el, track, initZoom, ms, tasks);
+    }
 
     // Zoom buttons in toolbar
     el.querySelectorAll('.msd-zoom-btn').forEach(btn => {
@@ -806,10 +943,19 @@
     const totalDays = (vsMs && vtMs) ? Math.ceil(vtMs / 86400000) : 0;
     const weekSlot  = inner.querySelector('.msd-week-hdr-slot');
     const daySlot   = inner.querySelector('.msd-day-hdr-slot');
-    if (weekSlot) weekSlot.innerHTML = (vsMs && vtMs && zoom >= 1.5 && totalDays <= 250) ? _weekHeaderHtml(new Date(vsMs), vtMs) : '';
-    if (daySlot)  daySlot.innerHTML  = (vsMs && vtMs && zoom >= 3   && totalDays <= 90)  ? _dayHeaderHtml(new Date(vsMs), vtMs)  : '';
-    // Re-draw dependency arrows after layout settles
-    if (ms && tasks) requestAnimationFrame(() => _drawDepArrows(el, ms.id, tasks));
+    const showWeek = !!(vsMs && vtMs && zoom >= 1.5 && totalDays <= 250);
+    const showDay  = !!(vsMs && vtMs && (zoom >= 3 || el.dataset.msdMode === 'day') && totalDays <= 120);
+    if (weekSlot) weekSlot.innerHTML = showWeek ? _weekHeaderHtml(new Date(vsMs), vtMs) : '';
+    if (daySlot)  daySlot.innerHTML  = showDay  ? _dayHeaderHtml(new Date(vsMs), vtMs)  : '';
+    // Sync label-column spacers to match header heights
+    const weekSpacer = el.querySelector('.msd-gl-week-spacer');
+    const daySpacer  = el.querySelector('.msd-gl-day-spacer');
+    if (weekSpacer) weekSpacer.style.display = showWeek ? '' : 'none';
+    if (daySpacer)  daySpacer.style.display  = showDay  ? '' : 'none';
+    // Redraw dep arrows after zoom if focus is active
+    if (ms && tasks && el._msdFocusIds) {
+      requestAnimationFrame(() => _drawDepArrows(el, ms.id, tasks, el._msdFocusIds));
+    }
   }
 
   // ─── Create task from deliverable modal ─────────────────
@@ -1010,10 +1156,11 @@
       });
     });
 
-    // Bar click → open detail panel
+    // Bar click → open detail panel (suppressed if user just dragged)
     el.querySelectorAll('.msd-task-bar').forEach(bar => {
       bar.addEventListener('click', e => {
         e.stopPropagation();
+        if (bar._msdDragged) { bar._msdDragged = false; return; }
         if (typeof window.openDetailPanel === 'function')
           window.openDetailPanel(proj.id, bar.dataset.taskId);
       });
@@ -1275,10 +1422,14 @@
     el.querySelectorAll('.msd-dl-focus-btn').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
-        const dlId = btn.dataset.dlId;
+        const dlId   = btn.dataset.dlId;
         const isSame = el.dataset.msdDlFocus === dlId;
         el.dataset.msdDlFocus = isSame ? '' : dlId;
-        _applyDlFocus(el, ms);
+        // Auto-switch to day mode when entering focus
+        if (!isSame) el.dataset.msdMode = 'day';
+        const fp = window.getProject(proj.id);
+        const ft = ((fp || proj).tasks || []).filter(t => !t.deleted && t.milestone_id === ms.id);
+        _applyDlFocus(el, ms, ft);
       });
     });
 
@@ -1286,7 +1437,9 @@
     el.querySelector('.msd-dl-focus-clear')?.addEventListener('click', e => {
       e.stopPropagation();
       el.dataset.msdDlFocus = '';
-      _applyDlFocus(el, ms);
+      const fp = window.getProject(proj.id);
+      const ft = ((fp || proj).tasks || []).filter(t => !t.deleted && t.milestone_id === ms.id);
+      _applyDlFocus(el, ms, ft);
     });
 
     // Deliverables — task row: click opens detail panel
@@ -1315,7 +1468,6 @@
         window.saveData();
         const upFp = window.getProject(proj.id);
         _render(el, upFp, (upFp?.milestones||[]).find(m => m.id === ms.id) || fm, projectId);
-        // Re-open the task list after re-render if it was open
         requestAnimationFrame(() => {
           const dlItem = el.querySelector(`.msd-dl-item[data-dl-id="${dlId}"]`);
           if (dlItem) {
@@ -1323,6 +1475,60 @@
             const icon     = dlItem.querySelector('.msd-dl-toggle-icon');
             if (taskList) { taskList.style.display = ''; if (icon) icon.classList.add('msd-dl-icon-open'); }
           }
+        });
+      });
+    });
+
+    // Deliverables — drag-to-reorder tasks within their task list
+    let _dlTrDragId = null, _dlTrDragDlId = null;
+    el.querySelectorAll('.msd-dl-task-list').forEach(tl => {
+      const dlId = tl.closest('.msd-dl-item')?.dataset.dlId;
+      tl.querySelectorAll('.msd-dl-task-row[draggable]').forEach(row => {
+        row.addEventListener('dragstart', e => {
+          e.stopPropagation(); // prevent parent .msd-dl-item drag
+          _dlTrDragId   = row.dataset.taskId;
+          _dlTrDragDlId = dlId;
+          row.classList.add('msd-dl-tr-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        row.addEventListener('dragend', () => {
+          row.classList.remove('msd-dl-tr-dragging');
+          tl.querySelectorAll('.msd-dl-task-row').forEach(r => r.classList.remove('msd-dl-tr-drop-over'));
+          _dlTrDragId = null; _dlTrDragDlId = null;
+        });
+        row.addEventListener('dragover', e => {
+          if (!_dlTrDragId || _dlTrDragDlId !== dlId) return;
+          e.preventDefault(); e.stopPropagation();
+          tl.querySelectorAll('.msd-dl-task-row').forEach(r => r.classList.remove('msd-dl-tr-drop-over'));
+          if (row.dataset.taskId !== _dlTrDragId) row.classList.add('msd-dl-tr-drop-over');
+        });
+        row.addEventListener('dragleave', () => row.classList.remove('msd-dl-tr-drop-over'));
+        row.addEventListener('drop', e => {
+          e.preventDefault(); e.stopPropagation();
+          row.classList.remove('msd-dl-tr-drop-over');
+          const fromId = _dlTrDragId, toId = row.dataset.taskId;
+          if (!fromId || fromId === toId || _dlTrDragDlId !== dlId) return;
+          const fp = window.getProject(proj.id);
+          const fm = (fp?.milestones||[]).find(m => m.id === ms.id) || ms;
+          const dl = (fm.deliverables||[]).find(d => d.id === dlId);
+          if (!dl) return;
+          const ids = [...(dl.task_ids||[])];
+          const fi = ids.indexOf(fromId), ti = ids.indexOf(toId);
+          if (fi < 0 || ti < 0) return;
+          ids.splice(fi, 1); ids.splice(ti, 0, fromId);
+          dl.task_ids = ids;
+          fm.updated_at = window.isoNow();
+          window.saveData();
+          const upFp = window.getProject(proj.id);
+          _render(el, upFp, (upFp?.milestones||[]).find(m => m.id === ms.id) || fm, projectId);
+          requestAnimationFrame(() => {
+            const dlItem = el.querySelector(`.msd-dl-item[data-dl-id="${dlId}"]`);
+            if (dlItem) {
+              const ntl  = dlItem.querySelector('.msd-dl-task-list');
+              const icon = dlItem.querySelector('.msd-dl-toggle-icon');
+              if (ntl) { ntl.style.display = ''; if (icon) icon.classList.add('msd-dl-icon-open'); }
+            }
+          });
         });
       });
     });
@@ -1386,7 +1592,149 @@
       const fp = window.getProject(projectId);
       if (!fp) return;
       const fm = (fp.milestones||[]).find(m => m.id === msId);
-      if (fm) _render(panel, fp, fm, projectId);
+      if (!fm) return;
+      // Preserve open deliverable task lists across re-render
+      const openDls = new Set();
+      panel.querySelectorAll('.msd-dl-task-list').forEach(tl => {
+        if (tl.style.display !== 'none') {
+          const dlId = tl.closest('.msd-dl-item')?.dataset.dlId;
+          if (dlId) openDls.add(dlId);
+        }
+      });
+      _render(panel, fp, fm, projectId);
+      if (openDls.size) {
+        requestAnimationFrame(() => {
+          openDls.forEach(dlId => {
+            const dlItem = panel.querySelector(`.msd-dl-item[data-dl-id="${dlId}"]`);
+            if (!dlItem) return;
+            const tl   = dlItem.querySelector('.msd-dl-task-list');
+            const icon = dlItem.querySelector('.msd-dl-toggle-icon');
+            if (tl) { tl.style.display = ''; if (icon) icon.classList.add('msd-dl-icon-open'); }
+          });
+        });
+      }
     });
+    _bindBarDrag(el, proj, ms, projectId);
   };
+
+  // ─── Bar drag (move / resize-l / resize-r) ────────────────────────
+  function _bindBarDrag(el, proj, ms, projectId) {
+    const track = el.querySelector(`#msd-track-${ms.id}`);
+    if (!track) return;
+    const SNAP = 43200000; // 0.5 day in ms
+
+    function snapMs(t) { return Math.round(t / SNAP) * SNAP; }
+    function msToDate(ts) {
+      const d = new Date(ts);
+      return d.getFullYear() + '-' +
+        String(d.getMonth()+1).padStart(2,'0') + '-' +
+        String(d.getDate()).padStart(2,'0');
+    }
+
+    el.querySelectorAll('.msd-task-bar').forEach(bar => {
+      const tId = bar.dataset.taskId;
+
+      function startDrag(e, mode) {
+        if (e.button !== 0) return;
+        e.stopPropagation();
+        e.preventDefault();
+        const task = (window.getProject(proj.id)?.tasks || []).find(t => t.id === tId);
+        if (!task) return;
+        const inner = track.querySelector('.msd-gantt-track-inner');
+        if (!inner) return;
+        const vsMs   = parseFloat(inner.dataset.viewStart);
+        const vtMs   = parseFloat(inner.dataset.viewTotal);
+        if (!vsMs || !vtMs) return;
+        const innerW  = inner.offsetWidth || 600;
+        const pxPerMs = innerW / vtMs;
+        const startX  = e.clientX;
+
+        const origDueMs = task.due_date
+          ? new Date(task.due_date + 'T00:00:00').getTime() : null;
+        const origDueEndMs = origDueMs !== null ? origDueMs + 86400000 : null;
+        const origWorkdays = task.workdays_needed?.value > 0
+          ? (task.workdays_needed.unit === 'weeks' ? task.workdays_needed.value * 7 : task.workdays_needed.value)
+          : null;
+        const origStartMs = (origDueMs !== null && origWorkdays !== null)
+          ? origDueMs - origWorkdays * 86400000
+          : (task.start_date ? new Date(task.start_date + 'T00:00:00').getTime() : null);
+
+        let didDrag = false;
+        let raf = null;
+        let latestDeltaX = 0;
+
+        function onMove(ev) {
+          latestDeltaX = ev.clientX - startX;
+          if (Math.abs(latestDeltaX) > 4) didDrag = true;
+          if (raf) return;
+          raf = requestAnimationFrame(() => {
+            raf = null;
+            const deltaMs = latestDeltaX / pxPerMs;
+            if (mode === 'move') {
+              if (origDueEndMs === null) return;
+              const newDueEndMs   = snapMs(origDueEndMs + deltaMs);
+              const newDuePct = (newDueEndMs - 86400000 - vsMs) / vtMs * 100;
+              const durMs  = origStartMs !== null ? origDueEndMs - origStartMs : 86400000;
+              bar.style.left  = Math.max(0, newDuePct).toFixed(2) + '%';
+              bar.style.width = Math.max(2, (durMs / vtMs * 100)).toFixed(2) + '%';
+            } else if (mode === 'resize-r') {
+              if (origDueEndMs === null) return;
+              const newDueEndMs = snapMs(origDueEndMs + deltaMs);
+              const newRightPct = (newDueEndMs - vsMs) / vtMs * 100;
+              const leftPct = parseFloat(bar.style.left) || 0;
+              bar.style.width = Math.max(2, newRightPct - leftPct).toFixed(2) + '%';
+            } else if (mode === 'resize-l') {
+              if (origDueEndMs === null) return;
+              const baseStartMs = origStartMs !== null ? origStartMs : origDueEndMs - 86400000;
+              const newStartMs  = snapMs(baseStartMs + deltaMs);
+              const leftPct     = (newStartMs - vsMs) / vtMs * 100;
+              const rightPct    = (origDueEndMs - vsMs) / vtMs * 100;
+              bar.style.left  = Math.max(0, leftPct).toFixed(2) + '%';
+              bar.style.width = Math.max(2, rightPct - Math.max(0, leftPct)).toFixed(2) + '%';
+            }
+          });
+        }
+
+        function onUp(ev) {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup',  onUp);
+          if (!didDrag) return;
+          bar._msdDragged = true;
+          const deltaMs = (ev.clientX - startX) / pxPerMs;
+          const task2 = (window.getProject(proj.id)?.tasks || []).find(t => t.id === tId);
+          if (!task2) return;
+          if (typeof window.pushUndo === 'function') window.pushUndo(proj.id);
+          if (mode === 'move' && origDueEndMs !== null) {
+            task2.due_date = msToDate(snapMs(origDueEndMs + deltaMs) - 86400000);
+          } else if (mode === 'resize-r' && origDueEndMs !== null) {
+            task2.due_date = msToDate(snapMs(origDueEndMs + deltaMs) - 86400000);
+          } else if (mode === 'resize-l' && origDueEndMs !== null) {
+            const baseStartMs = origStartMs !== null ? origStartMs : origDueEndMs - 86400000;
+            const newStartMs  = snapMs(baseStartMs + deltaMs);
+            const newDurDays  = (origDueEndMs - newStartMs) / 86400000;
+            task2.workdays_needed = { value: Math.max(0.5, Math.round(newDurDays * 2) / 2), unit: 'days' };
+          }
+          task2.updated_at = window.isoNow();
+          window.saveData();
+          window.renderTasks(proj.id);
+          const updProj = window.getProject(proj.id);
+          const updMs   = (updProj.milestones||[]).find(m => m.id === ms.id) || ms;
+          _render(el, updProj, updMs, projectId);
+        }
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',  onUp);
+      }
+
+      const handleL = bar.querySelector('.msd-bar-resize-l');
+      const handleR = bar.querySelector('.msd-bar-resize-r');
+      if (handleL) handleL.addEventListener('mousedown', e => startDrag(e, 'resize-l'));
+      if (handleR) handleR.addEventListener('mousedown', e => startDrag(e, 'resize-r'));
+      bar.addEventListener('mousedown', e => {
+        if (e.target.dataset.drag) return; // handled by handle
+        startDrag(e, 'move');
+      });
+    });
+  }
+
 })();

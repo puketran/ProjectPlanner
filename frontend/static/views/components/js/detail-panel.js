@@ -263,6 +263,8 @@
     task.updated_at  = window.isoNow();
     window.touchProject(projectId);
     window.renderTasks(projectId);
+    if (typeof window.refreshOpenMilestoneDetails === 'function')
+      window.refreshOpenMilestoneDetails(projectId);
   }
 
   // ─── Tab switching ────────────────────────────────────────

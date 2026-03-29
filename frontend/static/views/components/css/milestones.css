@@ -704,11 +704,26 @@
   display: flex;
   align-items: center;
   padding: 0 6px;
-  cursor: pointer;
+  cursor: grab;
   transition: opacity 0.15s, box-shadow 0.15s;
   min-width: 20px;
+  user-select: none;
 }
+.msd-task-bar:active { cursor: grabbing; }
 .msd-task-bar:hover { opacity: 0.82; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+.msd-bar-resize-l,
+.msd-bar-resize-r {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 7px;
+  cursor: ew-resize;
+  z-index: 2;
+  flex-shrink: 0;
+}
+.msd-bar-resize-l { left: 0; border-radius: 4px 0 0 4px; }
+.msd-bar-resize-r { right: 0; border-radius: 0 4px 4px 0; }
+.msd-bar-resize-l:hover,
+.msd-bar-resize-r:hover { background: rgba(255,255,255,0.25); }
 .msd-bar-blocked {
   border-style: dashed !important;
   animation: msd-blocked-blink 1.6s ease-in-out infinite;
@@ -976,6 +991,20 @@
 .msd-bar-outside {
   display: none;
 }
+/* Past-pin: task whose dates are before the view start; pinned at left edge */
+.msd-bar-past {
+  left: 0 !important;
+  width: 10px !important;
+  min-width: 10px !important;
+  overflow: visible !important;
+  opacity: 0.45;
+}
+.msd-bar-past .msd-bar-lbl {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+  padding-left: 12px;
+}
 
 /* ── Deliverables section ────────────────────────────────── */
 .msd-deliverables {
@@ -1142,25 +1171,55 @@
 }
 .msd-dl-task-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
-  padding: 3px 2px;
+  padding: 4px 2px;
   font-size: 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
 .msd-dl-task-row:hover { background: var(--bg-hover); }
 .msd-dl-task-row:hover .msd-dl-tr-unlink { opacity: 1; }
+.msd-dl-task-row:hover .msd-dl-tr-drag { opacity: 0.5; }
+/* Drag handle */
+.msd-dl-tr-drag {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 9px;
+  cursor: grab;
+  opacity: 0;
+  padding: 2px 1px;
+  margin-top: 2px;
+  transition: opacity 0.1s;
+}
+.msd-dl-tr-drag:hover { opacity: 1 !important; }
 .msd-dl-tr-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
+  margin-top: 4px;
 }
 .msd-dl-tr-disc {
   font-size: 10px;
   font-weight: 700;
   flex-shrink: 0;
+  margin-top: 2px;
+}
+/* Main column */
+.msd-dl-tr-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.msd-dl-tr-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 .msd-dl-tr-title {
   flex: 1;
@@ -1175,6 +1234,42 @@
   font-size: 9px;
   padding: 1px 5px;
 }
+/* Due date */
+.msd-dl-tr-date { font-size: 10px; color: var(--text-muted); flex-shrink: 0; white-space: nowrap; }
+.msd-dl-tr-date-late { color: #ef4444; }
+/* Days remaining */
+.msd-dl-tr-days { font-size: 10px; font-weight: 600; color: var(--text-muted); flex-shrink: 0; }
+.msd-dl-days-late  { color: #ef4444; }
+.msd-dl-days-today { color: #f97316; }
+/* Workdays estimate */
+.msd-dl-tr-wd { font-size: 10px; color: #8b5cf6; flex-shrink: 0; white-space: nowrap; }
+/* Prerequisites row */
+.msd-dl-tr-prereqs {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+  padding-left: 1px;
+}
+.msd-dl-tr-prereq {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 9px;
+  color: var(--text-secondary);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Drag states */
+.msd-dl-tr-dragging { opacity: 0.4; }
+.msd-dl-tr-drop-over { outline: 2px solid var(--color-primary, #6366f1); outline-offset: 1px; }
 /* Unlink button inside task row */
 .msd-dl-tr-unlink {
   flex-shrink: 0;
@@ -1187,6 +1282,7 @@
   opacity: 0;
   transition: opacity 0.1s, color 0.1s;
   line-height: 1;
+  margin-top: 1px;
 }
 .msd-dl-tr-unlink:hover { color: #ef4444; opacity: 1 !important; }
 /* Manual-check button (only on unlinked deliverables) */

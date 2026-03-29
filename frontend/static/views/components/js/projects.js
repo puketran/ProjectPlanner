@@ -287,6 +287,8 @@
     document.querySelectorAll('.project-tab-pane').forEach(p => p.classList.add('hidden'));
     const pane = document.getElementById('project-tab-' + tab);
     if (pane) pane.classList.remove('hidden');
+    if (tab === 'tasks' && typeof window.renderTasks === 'function')
+      window.renderTasks(window.currentProjectId);
     if (tab === 'notes' && typeof window.renderNotes === 'function')
       window.renderNotes(window.currentProjectId);
     if (tab === 'trash' && typeof window.renderTrash === 'function')

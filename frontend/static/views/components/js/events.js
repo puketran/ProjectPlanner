@@ -356,6 +356,16 @@
         e.preventDefault();
         window.switchView('projects');
       }
+
+      // Alt+R: refresh milestone detail panels (without page reload)
+      if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'r'
+          && window.currentProjectId
+          && typeof window.refreshOpenMilestoneDetails === 'function') {
+        const active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
+        e.preventDefault();
+        window.refreshOpenMilestoneDetails(window.currentProjectId);
+      }
     });
   });
 
